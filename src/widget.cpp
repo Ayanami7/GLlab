@@ -41,6 +41,12 @@ void MainWindow::init()
                 300.0f, 200.0f, 0.0f,
                 500.0f, -200.0f, 0.0f};
 
+    c_points3D = {
+        {-1.0f, -1.0f, +1.5f, -0.5f, 0.0f, +1.5f, +0.5f, 0.0f, +1.5f, +1.0f, 0.0f, +1.5f},
+        {-1.5f, 0.0f, +0.5f, -0.5f, 0.0f, +0.5f, +0.5f, 2.0f, +0.5f, +1.5f, 0.0f, +0.5f},
+        {-1.5f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, +0.5f, 0.0f, -0.5f, +1.5f, 0.0f, -0.5f},
+        {-1.0f, 1.0f, -1.5f, -0.5f, 0.0f, -1.5f, +0.5f, 0.0f, -1.5f, +2.5f, 1.0f, -1.5f}};
+
     // 初始化视图矩阵
     model = glm::mat4(1.0f);
     view = glm::mat4(1.0f);
@@ -92,6 +98,7 @@ void MainWindow::settingWidget()
             if (bezierIndex == BEZIER_LINE)
             {
                 projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
+                model = glm::mat4(1.0f);
             }
             else if (bezierIndex == BEZIER_SURFACE)
             {
@@ -101,18 +108,11 @@ void MainWindow::settingWidget()
                 projection = glm::perspective(glm::radians(fov), aspect, near, far);
             }
             shader->setMatrix4f("projection", projection);
+            shader->setMatrix4f("model", model);
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
         ImGui::PushItemWidth(120); // 设置接下来的控件宽度为120
-        // 设置相机距离
-        if (ImGui::SliderFloat("Camera Distance", &distance, 0.2f, 10.0f))
-        {
-            // 创建一个滑动条，范围从0.2到10
-            view = glm::mat4(1.0f);
-            view = glm::lookAt(glm::vec3(0.0f, 0.0f, distance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            shader->setMatrix4f("view", view);
-        }
         // 设置视野范围
         if (ImGui::SliderFloat("fov", &fov, 30.0f, 120.0f))
         {
@@ -128,28 +128,6 @@ void MainWindow::settingWidget()
                 projection = glm::perspective(glm::radians(fov), aspect, near, far);
             }
             shader->setMatrix4f("projection", projection);
-        }
-        ImGui::PopItemWidth(); // 恢复之前的宽度
-
-        ImGui::PushItemWidth(180); // 设置接下来的控件宽度为120
-        // 创建滑块
-        if (ImGui::SliderFloat("Rotation X", &rotationX, -180.0f, 180.0f) ||
-            ImGui::SliderFloat("Rotation Y", &rotationY, -180.0f, 180.0f) ||
-            ImGui::SliderFloat("Rotation Z", &rotationZ, -180.0f, 180.0f))
-        {
-            // 计算旋转矩阵
-            model = glm::mat4(1.0f);
-            if (bezierIndex == BEZIER_LINE)
-            {
-                ;
-            }
-            else if (bezierIndex == BEZIER_SURFACE)
-            {
-                model = glm::rotate(model, glm::radians(rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(rotationZ), glm::vec3(0.0f, 0.0f, 1.0f));
-            }
-            shader->setMatrix4f("model", model);
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
@@ -252,61 +230,90 @@ void MainWindow::render1()
 
 void MainWindow::render2()
 {
-    std::vector<std::vector<float>> controlPoints = {
-        {-1.0f, -1.0f, +1.5f, -0.5f, 0.0f, +1.5f, +0.5f, 0.0f, +1.5f, +1.0f, 0.0f, +1.5f},
-        {-1.5f, 0.0f, +0.5f, -0.5f, 0.0f, +0.5f, +0.5f, 2.0f, +0.5f, +1.5f, 0.0f, +0.5f},
-        {-1.5f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, +0.5f, 0.0f, -0.5f, +1.5f, 0.0f, -0.5f},
-        {-1.0f, 1.0f, -1.5f, -0.5f, 0.0f, -1.5f, +0.5f, 0.0f, -1.5f, +2.5f, 1.0f, -1.5f}};
-
-    std::vector<float> vertices;
-    for (float u = 0; u <= 1 - 0.02f; u += 0.02f)
+    // 计算量非常大，只在变化时计算
+    if(modfiy3D)
     {
-        for (float v = 0; v <= 1 - 0.02f; v += 0.02f)
+        for (float u = 0; u <= 1 - 0.02f; u += 0.02f)
         {
-            std::vector<std::vector<float>> quadVertices;
-            for (int du = 0; du <= 1; ++du)
+            for (float v = 0; v <= 1 - 0.02f; v += 0.02f)
             {
-                for (int dv = 0; dv <= 1; ++dv)
+                std::vector<std::vector<float>> quadVertices;
+                for (int du = 0; du <= 1; ++du)
                 {
-                    float x = 0.0f, y = 0.0f, z = 0.0f;
-                    for (int i = 0; i < 4; ++i)
+                    for (int dv = 0; dv <= 1; ++dv)
                     {
-                        for (int j = 0; j < 4; ++j)
+                        float x = 0.0f, y = 0.0f, z = 0.0f;
+                        for (int i = 0; i < 4; ++i)
                         {
-                            float basis = combination(3, i) * std::pow(1 - (u + du * 0.02f), 3 - i) * std::pow(u + du * 0.02f, i) * combination(3, j) * std::pow(1 - (v + dv * 0.02f), 3 - j) * std::pow(v + dv * 0.02f, j);
-                            x += basis * controlPoints[i][3 * j];
-                            y += basis * controlPoints[i][3 * j + 1];
-                            z += basis * controlPoints[i][3 * j + 2];
+                            for (int j = 0; j < 4; ++j)
+                            {
+                                float basis = combination(3, i) * std::pow(1 - (u + du * 0.02f), 3 - i) * std::pow(u + du * 0.02f, i) * combination(3, j) * std::pow(1 - (v + dv * 0.02f), 3 - j) * std::pow(v + dv * 0.02f, j);
+                                x += basis * c_points3D[i][3 * j];
+                                y += basis * c_points3D[i][3 * j + 1];
+                                z += basis * c_points3D[i][3 * j + 2];
+                            }
                         }
+                        quadVertices.push_back({x, y, z});
                     }
-                    quadVertices.push_back({x, y, z});
                 }
-            }
-            // Add two triangles forming the quad
-            vertices.insert(vertices.end(), quadVertices[0].begin(), quadVertices[0].end());
-            vertices.insert(vertices.end(), quadVertices[1].begin(), quadVertices[1].end());
-            vertices.insert(vertices.end(), quadVertices[2].begin(), quadVertices[2].end());
+                // Add two triangles forming the quad
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[0].begin(), quadVertices[0].end());
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[1].begin(), quadVertices[1].end());
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[2].begin(), quadVertices[2].end());
 
-            vertices.insert(vertices.end(), quadVertices[2].begin(), quadVertices[2].end());
-            vertices.insert(vertices.end(), quadVertices[1].begin(), quadVertices[1].end());
-            vertices.insert(vertices.end(), quadVertices[3].begin(), quadVertices[3].end());
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[2].begin(), quadVertices[2].end());
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[1].begin(), quadVertices[1].end());
+                vbuffer3D.insert(vbuffer3D.end(), quadVertices[3].begin(), quadVertices[3].end());
+            }
         }
+        modfiy3D = false;
     }
 
+    if (ImGui::IsMouseDragging(0)) // 0 是左键，1 是右键
+    {
+        ImVec2 drag_delta = ImGui::GetMouseDragDelta(0);
+        ImGui::ResetMouseDragDelta(0);
+
+        // 计算旋转角度，这里假设每拖动200像素，旋转90度
+        float rotate_angle_x = drag_delta.y / 200.0f * glm::pi<float>() / 2;
+        float rotate_angle_y = drag_delta.x / 200.0f * glm::pi<float>() / 2;
+
+        // 创建旋转矩阵
+        glm::mat4 rotate_x = glm::rotate(glm::mat4(1.0f), rotate_angle_x, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 rotate_y = glm::rotate(glm::mat4(1.0f), rotate_angle_y, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // 将旋转矩阵应用到模型矩阵
+        model = rotate_x * rotate_y * model;
+        shader->setMatrix4f("model", model);
+    }
+
+    // 获取ImGui的IO对象
+    ImGuiIO &io = ImGui::GetIO();
+
+    // 如果滚轮有滚动
+    if (io.MouseWheel != 0)
+    {
+        distance -= io.MouseWheel * zoom_speed;
+        view = glm::mat4(1.0f);
+        view = glm::lookAt(glm::vec3(0.0f, 0.0f, distance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        shader->setMatrix4f("view", view);
+    }
+
+    // 待优化
     unsigned int VAO, VBO;
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // 上传顶点数据到VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer3D.size(), vbuffer3D.data(), GL_DYNAMIC_DRAW);
     // 指定顶点属性
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-
+    // 绘制线框图
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_TRIANGLES, 0, (int)vertices.size() / 3);
+    glDrawArrays(GL_TRIANGLES, 0, (int)vbuffer3D.size() / 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDeleteVertexArrays(1, &VAO);

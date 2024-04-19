@@ -20,20 +20,25 @@ private:
     int rankIndex = 0;              // +3 为控制点数
     const char *bezierTypes[2] = {"Line", "Surface"};        //用于选择显示类型
     int bezierIndex = BEZIER_LINE;        //贝塞尔曲线类型
+
     std::vector<float> c_points;    // 控制点 默认存储为7个
     int draggingIndex = -1;              //用于判断屏幕上哪个点正在被拖动
-    
+
+    std::vector<std::vector<float>> c_points3D;
+
+    std::vector<float> vbuffer3D;    // 用于存储3D缓冲
+
+    bool modfiy3D = true;
     Shader *shader;
 public:
     int height, width;
 
-    float rotationX = 0.0f;
-    float rotationY = 0.0f;
-    float rotationZ = 0.0f;
-
     float distance = 3.0f;  // 相机距离
     float fov = 45.0f;      // 视野范围，角度制
 
+    float zoom_speed = 0.3f;    // 缩放速度
+
+    // MVP矩阵
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 projection;
