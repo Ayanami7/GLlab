@@ -11,3 +11,5 @@
 int combination(int n, int k);
 
 void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float step);
+
+void screenToViewport(float &x, float &y, float screenWidth, float screenHeight);

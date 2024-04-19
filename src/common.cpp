@@ -34,3 +34,9 @@ void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float
         vertices.push_back(z);
     }
 }
+
+void screenToViewport(float &x, float &y, float screenWidth, float screenHeight)
+{
+    x = (x / screenWidth - 0.5f) * screenWidth;
+    y = (0.5f - y / screenHeight) * screenHeight;
+}

@@ -56,7 +56,6 @@ void MainWindow::settingWidget()
     {
         if (ImGui::Combo("Combo", &rankIndex, ranks, IM_ARRAYSIZE(ranks)))
         {
-            maxRank = rankIndex + 2;
             std::cout << "current:" << ranks[rankIndex] << std::endl;
         }
     }
@@ -65,17 +64,16 @@ void MainWindow::settingWidget()
 
 void MainWindow::show()
 {
-    vector<float> points = {0.1f, 0.1f, 0.0f,
-                            0.3f, 0.5f, 0.0f,
-                            0.7f, 0.7f, 0.0f,
-                            1.9f, 0.3f, 0.0f};
+    // c_points = {0.0f, 300.0f, 0.0f,
+    //             100.0f, 300.0f, 0.0f,
+    //             200.0f, -100.0f, 0.0f,
+    //             400.0f, 200.0f, 0.0f};
     vector<float> vertices;
 
-    float aspect = static_cast<float>(width) / height;
-    glm::mat4 projection = glm::ortho(-aspect, aspect, -1.0f, 1.0f, 0.1f, 10.0f);
-    
-    glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-    float radius = 3.0f;
+    glm::mat4 projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
+
+    glm::mat4 view = glm::mat4(1.0f);
+    float radius = 3.0f;        //摄像机位置
     view = glm::lookAt(glm::vec3(0.0f, 0.0f, radius), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -99,15 +97,25 @@ void MainWindow::show()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 计算并绘制贝塞尔曲线
+        //计算并绘制贝塞尔曲线
         vertices.clear();
-        bezierCurve(points, vertices, 0.01f);
+        bezierCurve(c_points, vertices, 0.02f); //50步
         display(vertices);
+
+        for(int i = 0; i < c_points.size() / 3; i ++)
+        {
+            drawCircle(c_points[i * 3], c_points[i * 3 + 1], 8.0f, 20);
+        }
 
         if (ImGui::IsMouseClicked(0))
         {
             ImVec2 pos = ImGui::GetMousePos();
             std::cout << "Mouse clicked Screen position: (" << pos.x << ", " << pos.y << ")" << std::endl;
+            screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
+            std::cout << "Mouse clicked ViewPort position: (" << pos.x << ", " << pos.y << ")" << std::endl;
+            c_points.push_back(pos.x);
+            c_points.push_back(pos.y);
+            c_points.push_back(0.0f);
         }
 
         // 调试窗口
@@ -139,4 +147,33 @@ void MainWindow::display(vector<float> vertices)
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+}
+
+void MainWindow::drawCircle(float x, float y, float radius, int nums)
+{
+    std::vector<float> vertexData;
+    vertexData.push_back(x); // center x
+    vertexData.push_back(y); // center y
+
+    for (int i = 0; i <= nums; ++i) {
+        vertexData.push_back(x + (radius * cos(i * 2.0f * 3.14f / nums)));
+        vertexData.push_back(y + (radius * sin(i * 2.0f * 3.14f / nums)));
+    }
+
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, nums + 2);
+
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
 }
