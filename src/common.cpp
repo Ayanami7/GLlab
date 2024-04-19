@@ -14,11 +14,11 @@ int combination(int n, int k)
 }
 
 // 计算贝塞尔曲线上的点
-void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float step)
+void bezierCurve(std::vector<float> &points,int n, std::vector<float> &vertices, float step)
 {
     if(points.size() < 6)
         return;
-    int n = static_cast<int>(points.size() / 3 - 1); // 控制点数量减1，即贝塞尔曲线的阶数
+    n = n - 1;
     for (float t = 0; t <= 1; t += step)
     {
         float x = 0.0f, y = 0.0f, z = 0.0f;
@@ -35,8 +35,4 @@ void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float
     }
 }
 
-void screenToViewport(float &x, float &y, float screenWidth, float screenHeight)
-{
-    x = (x / screenWidth - 0.5f) * screenWidth;
-    y = (0.5f - y / screenHeight) * screenHeight;
-}
+

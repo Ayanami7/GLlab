@@ -10,6 +10,18 @@
 
 int combination(int n, int k);
 
-void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float step);
+void bezierCurve(std::vector<float> &points, int n, std::vector<float> &vertices, float step);
 
-void screenToViewport(float &x, float &y, float screenWidth, float screenHeight);
+inline void screenToViewport(float &x, float &y, float screenWidth, float screenHeight)
+{
+    x = (x / screenWidth - 0.5f) * screenWidth;
+    y = (0.5f - y / screenHeight) * screenHeight;
+}
+
+inline bool insideCircle(float x, float y, float rx, float ry, float radius)
+{
+    float dx = x - rx;
+    float dy = y - ry;
+    float t = dx * dx + dy * dy;
+    return t <= radius * radius;
+}

@@ -16,6 +16,14 @@ void MainWindow::init()
         return;
     }
 
+    c_points = {-500.0f, -200.0f, 0.0f,
+                -300.0f, 200.0f, 0.0f,
+                -100.0f, -200.0f, 0.0f,
+                0.0f, 200.0f, 0.0f,
+                100.0f, -200.0f, 0.0f,
+                300.0f, 200.0f, 0.0f,
+                500.0f, -200.0f, 0.0f};
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -54,20 +62,13 @@ void MainWindow::settingWidget()
 {
     if (ImGui::Begin("setting"))
     {
-        if (ImGui::Combo("Combo", &rankIndex, ranks, IM_ARRAYSIZE(ranks)))
-        {
-            std::cout << "current:" << ranks[rankIndex] << std::endl;
-        }
+        ImGui::Combo("Combo", &rankIndex, ranks, IM_ARRAYSIZE(ranks));
     }
     ImGui::End();
 }
 
 void MainWindow::show()
 {
-    // c_points = {0.0f, 300.0f, 0.0f,
-    //             100.0f, 300.0f, 0.0f,
-    //             200.0f, -100.0f, 0.0f,
-    //             400.0f, 200.0f, 0.0f};
     vector<float> vertices;
 
     glm::mat4 projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
@@ -91,33 +92,51 @@ void MainWindow::show()
         // 清除颜色缓冲区
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
         // 开始新的 ImGui 帧
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        //计算并绘制贝塞尔曲线
-        vertices.clear();
-        bezierCurve(c_points, vertices, 0.02f); //50步
-        display(vertices);
-
-        for(int i = 0; i < c_points.size() / 3; i ++)
+        //绘制控制点
+        for (int i = 0; i < rankIndex + 2; i++)
         {
             drawCircle(c_points[i * 3], c_points[i * 3 + 1], 8.0f, 20);
         }
+        //计算并绘制贝塞尔曲线
+        vertices.clear();
+        bezierCurve(c_points, rankIndex + 2, vertices, 0.02f); // 50步进
+        display(vertices);
 
-        if (ImGui::IsMouseClicked(0))
+        // 鼠标处理
+        if (ImGui::IsMouseClicked(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         {
             ImVec2 pos = ImGui::GetMousePos();
-            std::cout << "Mouse clicked Screen position: (" << pos.x << ", " << pos.y << ")" << std::endl;
             screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
-            std::cout << "Mouse clicked ViewPort position: (" << pos.x << ", " << pos.y << ")" << std::endl;
-            c_points.push_back(pos.x);
-            c_points.push_back(pos.y);
-            c_points.push_back(0.0f);
-        }
 
+            // 检查鼠标点击的位置是否在点的范围内
+            for (int i = 0; i < rankIndex + 2; i++)
+            {
+                if (insideCircle(pos.x, pos.y, c_points[i * 3], c_points[i * 3 + 1], 8.0f))
+                {
+                    draggingIndex = i;
+                    break;
+                }
+            }
+        }
+        else if (ImGui::IsMouseDragging(0) && draggingIndex != -1)
+        {
+            // 如果正在拖动就更新
+            ImVec2 pos = ImGui::GetMousePos();
+            screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
+            c_points[draggingIndex * 3] = pos.x;
+            c_points[draggingIndex * 3 + 1] = pos.y;
+        }
+        else if (ImGui::IsMouseReleased(0))
+        {
+            // 如果鼠标被释放，停止拖动
+            draggingIndex = -1;
+        }
+        
         // 调试窗口
         debugWidget();
         // 设置窗口
@@ -130,7 +149,7 @@ void MainWindow::show()
     }
 }
 
-void MainWindow::display(vector<float> vertices)
+void MainWindow::display(vector<float> &vertices)
 {
     unsigned int VAO, VBO;
     glGenBuffers(1, &VBO);
