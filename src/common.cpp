@@ -35,4 +35,39 @@ void bezierCurve(std::vector<float> &points,int n, std::vector<float> &vertices,
     }
 }
 
+void createSphere(glm::vec3 center, std::vector<float> &vertices,
+                  std::vector<unsigned int> &indices, float radius, unsigned int rings, unsigned int sectors)
+{
+    vertices.clear();
+    indices.clear();
 
+    for (unsigned int y = 0; y <= rings; ++y)
+    {
+        for (unsigned int x = 0; x <= sectors; ++x)
+        {
+            float xSegment = (float)x / (float)sectors;
+            float ySegment = (float)y / (float)rings;
+            float xPos = std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+            float yPos = std::cos(ySegment * M_PI);
+            float zPos = std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+
+            vertices.push_back(xPos * radius + center.x);
+            vertices.push_back(yPos * radius + center.y);
+            vertices.push_back(zPos * radius + center.z);
+        }
+    }
+
+    for (unsigned int i = 0; i < rings; ++i)
+    {
+        for (unsigned int j = 0; j < sectors; ++j)
+        {
+            int start = (i * (sectors + 1) + j);
+            indices.push_back(start);
+            indices.push_back(start + sectors + 1);
+            indices.push_back(start + sectors + 2);
+            indices.push_back(start);
+            indices.push_back(start + sectors + 2);
+            indices.push_back(start + 1);
+        }
+    }
+}

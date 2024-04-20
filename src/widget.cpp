@@ -1,6 +1,8 @@
 #include "widget.h"
 
+using glm::vec3;
 using std::vector;
+using glm::mat4;
 
 void MainWindow::init()
 {
@@ -34,8 +36,9 @@ void MainWindow::init()
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO3D);
     glGenVertexArrays(1, &VAO3D);
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBOs);
+    glGenVertexArrays(1, &VAOs);
+    glGenBuffers(1, &EBOs);
 
     // 加载着色器
     shader = new Shader("../../shader/default_vert.glsl", "../../shader/default_frag.glsl");
@@ -51,7 +54,7 @@ void MainWindow::init()
 
     c_points3D = {
         {-1.0f, -1.0f, +1.5f, -0.5f, 0.0f, +1.5f, +0.5f, 0.0f, +1.5f, +1.0f, 0.0f, +1.5f},
-        {-1.5f, 0.0f, +0.5f, -0.5f, 0.0f, +0.5f, +0.5f, 2.0f, +0.5f, +1.5f, 0.0f, +0.5f},
+        {-1.5f, 0.0f, +0.5f, -0.5f, 0.0f, +0.5f, +0.5f, 1.0f, +0.5f, +1.5f, 0.0f, +0.5f},
         {-1.5f, 0.0f, -0.5f, -0.5f, 0.0f, -0.5f, +0.5f, 0.0f, -0.5f, +1.5f, 0.0f, -0.5f},
         {-1.0f, 1.0f, -1.5f, -0.5f, 0.0f, -1.5f, +0.5f, 0.0f, -1.5f, +2.5f, 1.0f, -1.5f}};
 
@@ -66,6 +69,7 @@ void MainWindow::init()
     shader->setMatrix4f("projection", projection);
     shader->setMatrix4f("view", view);
     shader->setMatrix4f("model", model);
+    shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 }
 
 void MainWindow::destroy()
@@ -88,11 +92,23 @@ void MainWindow::destroy()
 
 void MainWindow::show()
 {
+    // 初始化绑定信息
+    vbuffer.clear();
+    bezierCurve(c_points, rankIndex + 3, vbuffer, 0.02f); // 50步进
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer.size(), vbuffer.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
     while (!glfwWindowShouldClose(window))
     {
+        glEnable(GL_DEPTH_TEST);
         glfwPollEvents();
 
-        // 清除颜色缓冲区
+        // 清除颜色缓冲区glEnable(GL_DEPTH_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT); // 清除深度缓冲区
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         // 开始新的 ImGui 帧
@@ -138,8 +154,8 @@ void MainWindow::settingWidget()
     {
         ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
         // 设置阶数
-        ImGui::Combo("Bezier Ranks", &rankIndex, ranks, IM_ARRAYSIZE(ranks));
-        if (ImGui::Combo("Display Status", &bezierIndex, bezierTypes, IM_ARRAYSIZE(bezierTypes)))
+        if (ImGui::Combo("Bezier Ranks", &rankIndex, ranks, IM_ARRAYSIZE(ranks)) ||
+            ImGui::Combo("Display Status", &bezierIndex, bezierTypes, IM_ARRAYSIZE(bezierTypes)))
         {
             switchType();
         }
@@ -153,58 +169,93 @@ void MainWindow::settingWidget()
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
+        if(ImGui::Checkbox("Hide Control Points", &hidePoints))
+        {
+            ;
+        }
+
     }// end setting
     ImGui::End();
 }
 
 void MainWindow::render1()
 {
-    for (int i = 0; i < rankIndex + 3; i++)
+    // 绘制控制点
+    if (!hidePoints)    //非隐藏模式时绘制
     {
-        drawCircle(c_points[i * 3], c_points[i * 3 + 1], 8.0f, 16);
+        for (int i = 0; i < rankIndex + 3; i++)
+        {
+            float x = c_points[i * 3];
+            float y = c_points[i * 3 + 1];
+            float z = 0.0f;
+            int nums = 20;
+            float radius = 8.0f;
+            sbuffer.clear();
+            sbuffer.push_back(x);
+            sbuffer.push_back(y);
+            sbuffer.push_back(z);
+
+            for (int i = 0; i <= nums; ++i)
+            {
+                sbuffer.push_back(x + (radius * cos(i * 2.0f * 3.14f / nums)));
+                sbuffer.push_back(y + (radius * sin(i * 2.0f * 3.14f / nums)));
+                sbuffer.push_back(z);
+            }
+
+            glBindVertexArray(VAOs);
+            glBindBuffer(GL_ARRAY_BUFFER, VBOs);
+            glBufferData(GL_ARRAY_BUFFER, sbuffer.size() * sizeof(float), &sbuffer[0], GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+            glEnableVertexAttribArray(0);
+
+            glDrawArrays(GL_TRIANGLE_FAN, 0, nums + 2);
+        }
     }
 
-    // 绑定信息
-    vbuffer.clear();
-    bezierCurve(c_points, rankIndex + 3, vbuffer, 0.02f); // 50步进
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBindVertexArray(VAO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer.size(), vbuffer.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
     // 绘制
+    glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP, 0, (int)vbuffer.size() / 3);
 
     // 鼠标处理
-    if (ImGui::IsMouseClicked(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    if (!hidePoints)            //非隐藏模式时才处理鼠标事件
     {
-        ImVec2 pos = ImGui::GetMousePos();
-        screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
-
-        // 检查鼠标点击的位置是否在点的范围内
-        for (int i = 0; i < rankIndex + 3; i++)
+        if (ImGui::IsMouseClicked(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         {
-            if (insideCircle(pos.x, pos.y, c_points[i * 3], c_points[i * 3 + 1], 8.0f))
+            ImVec2 pos = ImGui::GetMousePos();
+            screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
+
+            // 检查鼠标点击的位置是否在点的范围内
+            for (int i = 0; i < rankIndex + 3; i++)
             {
-                draggingIndex = i;
-                break;
+                if (insideCircle(pos.x, pos.y, c_points[i * 3], c_points[i * 3 + 1], 8.0f))
+                {
+                    draggingIndex = i;
+                    break;
+                }
             }
         }
-    }
-    else if (ImGui::IsMouseDragging(0) && draggingIndex != -1)
-    {
-        // 如果正在拖动就更新
-        ImVec2 pos = ImGui::GetMousePos();
-        screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
-        c_points[draggingIndex * 3] = pos.x;
-        c_points[draggingIndex * 3 + 1] = pos.y;
-    }
-    else if (ImGui::IsMouseReleased(0))
-    {
-        // 如果鼠标被释放，停止拖动
-        draggingIndex = -1;
+        else if (ImGui::IsMouseDragging(0) && draggingIndex != -1)
+        {
+            // 如果正在拖动就更新
+            ImVec2 pos = ImGui::GetMousePos();
+            screenToViewport(pos.x, pos.y, width * 1.0f, height * 1.0f);
+            c_points[draggingIndex * 3] = pos.x;
+            c_points[draggingIndex * 3 + 1] = pos.y;
+
+            // 拖动时修改线信息
+            vbuffer.clear();
+            bezierCurve(c_points, rankIndex + 3, vbuffer, 0.02f); // 50步进
+            glBindVertexArray(VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer.size(), vbuffer.data(), GL_DYNAMIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+            glEnableVertexAttribArray(0);
+        }
+        else if (ImGui::IsMouseReleased(0))
+        {
+            // 如果鼠标被释放，停止拖动
+            draggingIndex = -1;
+        }
     }
 }
 
@@ -236,7 +287,7 @@ void MainWindow::render2()
                         quadVertices.push_back({x, y, z});
                     }
                 }
-                // Add two triangles forming the quad
+
                 vbuffer3D.insert(vbuffer3D.end(), quadVertices[0].begin(), quadVertices[0].end());
                 vbuffer3D.insert(vbuffer3D.end(), quadVertices[1].begin(), quadVertices[1].end());
                 vbuffer3D.insert(vbuffer3D.end(), quadVertices[2].begin(), quadVertices[2].end());
@@ -257,9 +308,67 @@ void MainWindow::render2()
     }
 
     // 绘制线框图
+    glBindVertexArray(VAO3D);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDrawArrays(GL_TRIANGLES, 0, (int)vbuffer3D.size() / 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    // 绘制特殊点
+    if (!hidePoints)
+    {
+        shader->setVec4("color", glm::vec4(0.7f, 0.85f, 0.90f, 1.0f));
+        for (int p = 0; p < 4; p++)
+        {
+            for (int q = 0; q < 4; q++)
+            {
+                int rings = 30;
+                float radius = 0.02f;
+                sbuffer.clear();
+                ibuffer.clear();
+
+                for (int y = 0; y <= rings; ++y)
+                {
+                    for (int x = 0; x <= rings; ++x)
+                    {
+                        float xSegment = (float)x / (float)rings;
+                        float ySegment = (float)y / (float)rings;
+                        float xPos = std::cos(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+                        float yPos = std::cos(ySegment * M_PI);
+                        float zPos = std::sin(xSegment * 2.0f * M_PI) * std::sin(ySegment * M_PI);
+
+                        sbuffer.push_back(xPos * radius + c_points3D[p][q * 3]);
+                        sbuffer.push_back(yPos * radius + c_points3D[p][q * 3 + 1]);
+                        sbuffer.push_back(zPos * radius + c_points3D[p][q * 3 + 2]);
+                    }
+                }
+
+                for (int i = 0; i < rings; ++i)
+                {
+                    for (int j = 0; j < rings; ++j)
+                    {
+                        int start = (i * (rings + 1) + j);
+                        ibuffer.push_back(start);
+                        ibuffer.push_back(start + rings + 1);
+                        ibuffer.push_back(start + rings + 2);
+                        ibuffer.push_back(start);
+                        ibuffer.push_back(start + rings + 2);
+                        ibuffer.push_back(start + 1);
+                    }
+                }
+                // 创建顶点数组对象
+                glBindVertexArray(VAOs);
+                glBindBuffer(GL_ARRAY_BUFFER, VBOs);
+                glBufferData(GL_ARRAY_BUFFER, sbuffer.size() * sizeof(float), &sbuffer[0], GL_STATIC_DRAW);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer.size() * sizeof(unsigned int), &ibuffer[0], GL_STATIC_DRAW);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+                glEnableVertexAttribArray(0);
+
+                glDrawElements(GL_TRIANGLES, (int)ibuffer.size(), GL_UNSIGNED_INT, 0);
+            }
+        }
+        shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+    }
 
     if (ImGui::IsMouseDragging(0)) // 0 是左键，1 是右键
     {
@@ -297,8 +406,13 @@ void MainWindow::switchType()
         projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
         model = glm::mat4(1.0f);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        vbuffer.clear();
+        bezierCurve(c_points, rankIndex + 3, vbuffer, 0.02f); // 50步进
         glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer.size(), vbuffer.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
     }
     else if (bezierIndex == BEZIER_SURFACE)
     {
@@ -307,30 +421,10 @@ void MainWindow::switchType()
         float far = 100.0f;                          // 远裁剪面
         projection = glm::perspective(glm::radians(fov), aspect, near, far);
         
-        glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
         glBindVertexArray(VAO3D);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
     }
     shader->setMatrix4f("projection", projection);
     shader->setMatrix4f("model", model);
-}
-
-void MainWindow::drawCircle(float x, float y, float radius, int nums)
-{
-    vbuffer.clear();
-    vbuffer.push_back(x); // center x
-    vbuffer.push_back(y); // center y
-
-    for (int i = 0; i <= nums; ++i)
-    {
-        vbuffer.push_back(x + (radius * cos(i * 2.0f * 3.14f / nums)));
-        vbuffer.push_back(y + (radius * sin(i * 2.0f * 3.14f / nums)));
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBindVertexArray(VAO);
-    glBufferData(GL_ARRAY_BUFFER, vbuffer.size() * sizeof(float), &vbuffer[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, nums + 2);
+    shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 }

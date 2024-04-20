@@ -31,7 +31,12 @@ private:
     std::vector<float> vbuffer3D;                           // 用于存储3D面缓冲
     unsigned int VAO3D, VBO3D;                              // 3D VAO VBO
 
+    std::vector<float> sbuffer;                             // 用于存储球体缓冲
+    std::vector<unsigned int> ibuffer;                      // 存储索引缓冲
+    unsigned int VAOs, VBOs, EBOs;                          // 球体 VAO VBO EBO
+
     bool modfiy3D = true;
+    bool hidePoints = true;
     Shader *shader;
 public:
     int height, width;
@@ -52,7 +57,6 @@ private:
     void render1();                  // 绘制贝塞尔曲线
     void render2();                  // 绘制贝塞尔曲面
     void switchType();               // 控件改变时切换类型
-    void drawCircle(float x, float y, float radius, int nums);      //绘制圆
 
 public:
     MainWindow(int w = 1280, int h = 720, const char *t = "ImGui OpenGL")

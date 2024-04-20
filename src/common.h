@@ -7,10 +7,16 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
+
+#define M_PI 3.14f
 
 int combination(int n, int k);
 
 void bezierCurve(std::vector<float> &points, int n, std::vector<float> &vertices, float step);
+
+void createSphere(glm::vec3 center, std::vector<float> &vertices,
+                  std::vector<unsigned int> &indices, float radius, unsigned int rings, unsigned int sectors);
 
 inline void screenToViewport(float &x, float &y, float screenWidth, float screenHeight)
 {
