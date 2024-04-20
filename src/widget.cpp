@@ -142,9 +142,8 @@ void MainWindow::debugWidget()
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
 
-    ImGui::Text("This is a test.");
+    ImGui::PushTextWrapPos(ImGui::GetWindowWidth());        //自动换行
     ImGui::Text("Framebuffer size: %d x %d", w, h);
-    ImGui::Text("Current Bezier rank: %s", ranks[rankIndex]);
     ImGui::Text("Current Display type: %s", bezierTypes[bezierIndex]);
 }
 
@@ -169,12 +168,38 @@ void MainWindow::settingWidget()
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
+        // 选择是否隐藏控制点
         if(ImGui::Checkbox("Hide Control Points", &hidePoints))
         {
             ;
         }
 
-    }// end setting
+        ImGui::PushItemWidth(100);
+        // 选择3D控制点
+        if (bezierIndex == BEZIER_SURFACE)
+        {
+            ImGui::Combo("Control Points", &pointsIndex, controlPointOptions, IM_ARRAYSIZE(controlPointOptions));
+            float x = c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3];
+            float y = c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 1];
+            float z = c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 2];
+
+            bool t1 = ImGui::SliderFloat("x", &x, -2.0f, 2.0f);
+            bool t2 = ImGui::SliderFloat("y", &y, -2.0f, 2.0f);
+            bool t3 = ImGui::SliderFloat("z", &z, -2.0f, 2.0f);
+
+            if (t1 || t2 || t3)
+            {
+                c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3] = x;
+                c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 1] = y;
+                c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 2] = z;
+                static int count = 0;
+                std::cout << "count: " << count++ << std::endl;
+                modfiy3D = true;
+            }
+        }
+        ImGui::PopItemWidth();
+
+    } // end setting
     ImGui::End();
 }
 
@@ -264,6 +289,7 @@ void MainWindow::render2()
     // 计算量非常大，只在变化时计算
     if(modfiy3D)
     {
+        vbuffer3D.clear();
         for (float u = 0; u <= 1 - 0.02f; u += 0.02f)
         {
             for (float v = 0; v <= 1 - 0.02f; v += 0.02f)
@@ -316,13 +342,20 @@ void MainWindow::render2()
     // 绘制特殊点
     if (!hidePoints)
     {
-        shader->setVec4("color", glm::vec4(0.7f, 0.85f, 0.90f, 1.0f));
         for (int p = 0; p < 4; p++)
         {
             for (int q = 0; q < 4; q++)
             {
-                int rings = 30;
-                float radius = 0.02f;
+                if (p * 4 + q == pointsIndex)
+                {
+                    shader->setVec4("color", glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));    //蓝色
+                }
+                else
+                {
+                    shader->setVec4("color", glm::vec4(0.8f, 0.85f, 0.90f, 1.0f));  //浅蓝色
+                }
+                int rings = 20;             //采样率
+                float radius = 0.02f;       //半径
                 sbuffer.clear();
                 ibuffer.clear();
 
@@ -370,7 +403,9 @@ void MainWindow::render2()
         shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
     }
 
-    if (ImGui::IsMouseDragging(0)) // 0 是左键，1 是右键
+    if (ImGui::IsMouseDragging(0) &&        //鼠标左键拖动
+        !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&     //鼠标不在ImGui窗口上
+        !ImGui::IsAnyItemActive())          //没有其他活动项
     {
         ImVec2 drag_delta = ImGui::GetMouseDragDelta(0);
         ImGui::ResetMouseDragDelta(0);
@@ -390,7 +425,8 @@ void MainWindow::render2()
     // 获取ImGui的IO对象
     ImGuiIO &io = ImGui::GetIO();
     // 如果滚轮有滚动
-    if (io.MouseWheel != 0)
+    if (io.MouseWheel != 0 &&
+        !ImGui::IsAnyItemActive())
     {
         distance -= io.MouseWheel * zoom_speed;
         view = glm::mat4(1.0f);

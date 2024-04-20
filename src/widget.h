@@ -18,7 +18,10 @@ private:
     // 用于控件
     const char *ranks[5] = {"2", "3", "4", "5", "6"};       //用于选择阶数
     int rankIndex = 0;                                      // +3 为控制点数
-    const char *bezierTypes[2] = {"Line", "Surface"};       //用于选择显示类型
+    const char *controlPointOptions[16] =
+        {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}; // 用于选择3D控制点
+    int pointsIndex = 0;                               // 3D控制点索引
+    const char *bezierTypes[2] = {"2D", "3D"};       //用于选择显示类型
     int bezierIndex = BEZIER_LINE;                          //贝塞尔曲线类型
 
     int draggingIndex = -1;                                 //用于判断屏幕上哪个点正在被拖动
