@@ -16,15 +16,15 @@ private:
     const char *title;
     const char *glsl_version = "#version 130";
     // 用于控件
-    const char *ranks[5] = {"2", "3", "4", "5", "6"};       //用于选择阶数
+    const char *ranks[5] = {"2", "3", "4", "5", "6"};       // 用于选择阶数
     int rankIndex = 0;                                      // +3 为控制点数
     const char *controlPointOptions[16] =
         {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}; // 用于选择3D控制点
-    int pointsIndex = 0;                               // 3D控制点索引
-    const char *bezierTypes[2] = {"2D", "3D"};       //用于选择显示类型
-    int bezierIndex = BEZIER_LINE;                          //贝塞尔曲线类型
+    int pointsIndex = 0;                                    // 3D控制点索引
+    const char *bezierTypes[2] = {"2D", "3D"};              // 用于选择显示类型
+    int bezierIndex = BEZIER_LINE;                          // 贝塞尔曲线类型
 
-    int draggingIndex = -1;                                 //用于判断屏幕上哪个点正在被拖动
+    int draggingIndex = -1;                                 // 用于判断屏幕上哪个点正在被拖动
 
     std::vector<float> c_points;                            // 控制点 默认存储为7个
     std::vector<float> vbuffer;                             // 用于存储线缓冲
@@ -39,13 +39,13 @@ private:
     unsigned int VAOs, VBOs, EBOs;                          // 球体 VAO VBO EBO
 
     bool modfiy3D = true;
-    bool hidePoints = true;
+    bool displayPoints = false;
     Shader *shader;
 public:
     int height, width;
 
-    float distance = 3.0f;  // 相机初始距离
-    float fov = 45.0f;      // 视野范围，角度制
+    float distance = 3.0f;      // 相机初始距离
+    float fov = 45.0f;          // 视野范围，角度制
 
     float zoom_speed = 0.3f;    // 缩放速度
 

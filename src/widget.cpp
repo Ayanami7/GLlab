@@ -169,7 +169,7 @@ void MainWindow::settingWidget()
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
         // 选择是否隐藏控制点
-        if(ImGui::Checkbox("Hide Control Points", &hidePoints))
+        if(ImGui::Checkbox("Display Control Points", &displayPoints))
         {
             ;
         }
@@ -192,8 +192,6 @@ void MainWindow::settingWidget()
                 c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3] = x;
                 c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 1] = y;
                 c_points3D[pointsIndex / 4][(pointsIndex % 4) * 3 + 2] = z;
-                static int count = 0;
-                std::cout << "count: " << count++ << std::endl;
                 modfiy3D = true;
             }
         }
@@ -206,7 +204,7 @@ void MainWindow::settingWidget()
 void MainWindow::render1()
 {
     // 绘制控制点
-    if (!hidePoints)    //非隐藏模式时绘制
+    if (displayPoints)    //非隐藏模式时绘制
     {
         for (int i = 0; i < rankIndex + 3; i++)
         {
@@ -242,7 +240,7 @@ void MainWindow::render1()
     glDrawArrays(GL_LINE_STRIP, 0, (int)vbuffer.size() / 3);
 
     // 鼠标处理
-    if (!hidePoints)            //非隐藏模式时才处理鼠标事件
+    if (displayPoints)            //非隐藏模式时才处理鼠标事件
     {
         if (ImGui::IsMouseClicked(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         {
@@ -340,7 +338,7 @@ void MainWindow::render2()
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // 绘制特殊点
-    if (!hidePoints)
+    if (displayPoints)
     {
         for (int p = 0; p < 4; p++)
         {
