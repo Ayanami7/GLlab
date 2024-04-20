@@ -16,24 +16,27 @@ private:
     const char *title;
     const char *glsl_version = "#version 130";
     // 用于控件
-    const char *ranks[5] = {"2", "3", "4", "5", "6"};  //用于选择阶数
-    int rankIndex = 0;              // +3 为控制点数
-    const char *bezierTypes[2] = {"Line", "Surface"};        //用于选择显示类型
-    int bezierIndex = BEZIER_LINE;        //贝塞尔曲线类型
+    const char *ranks[5] = {"2", "3", "4", "5", "6"};       //用于选择阶数
+    int rankIndex = 0;                                      // +3 为控制点数
+    const char *bezierTypes[2] = {"Line", "Surface"};       //用于选择显示类型
+    int bezierIndex = BEZIER_LINE;                          //贝塞尔曲线类型
 
-    std::vector<float> c_points;    // 控制点 默认存储为7个
-    int draggingIndex = -1;              //用于判断屏幕上哪个点正在被拖动
+    int draggingIndex = -1;                                 //用于判断屏幕上哪个点正在被拖动
 
-    std::vector<std::vector<float>> c_points3D;
+    std::vector<float> c_points;                            // 控制点 默认存储为7个
+    std::vector<float> vbuffer;                             // 用于存储线缓冲
+    unsigned int VAO, VBO;                                  // VAO VBO
 
-    std::vector<float> vbuffer3D;    // 用于存储3D缓冲
+    std::vector<std::vector<float>> c_points3D;             // 存储3D控制点
+    std::vector<float> vbuffer3D;                           // 用于存储3D面缓冲
+    unsigned int VAO3D, VBO3D;                              // 3D VAO VBO
 
     bool modfiy3D = true;
     Shader *shader;
 public:
     int height, width;
 
-    float distance = 3.0f;  // 相机距离
+    float distance = 3.0f;  // 相机初始距离
     float fov = 45.0f;      // 视野范围，角度制
 
     float zoom_speed = 0.3f;    // 缩放速度
@@ -48,6 +51,7 @@ private:
     void settingWidget();            // 设置窗口
     void render1();                  // 绘制贝塞尔曲线
     void render2();                  // 绘制贝塞尔曲面
+    void switchType();               // 控件改变时切换类型
     void drawCircle(float x, float y, float radius, int nums);      //绘制圆
 
 public:

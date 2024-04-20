@@ -29,6 +29,14 @@ void MainWindow::init()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    //初始化VAO VBO
+    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO3D);
+    glGenVertexArrays(1, &VAO3D);
+    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &VAO);
+
     // 加载着色器
     shader = new Shader("../../shader/default_vert.glsl", "../../shader/default_frag.glsl");
 
@@ -64,6 +72,11 @@ void MainWindow::destroy()
 {
     // 清理着色器
     delete shader;
+    // 销毁缓冲
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO3D);
+    glDeleteBuffers(1, &VBO3D);
     // 清理 ImGui
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -71,68 +84,6 @@ void MainWindow::destroy()
     // 清理 GLFW
     glfwDestroyWindow(window);
     glfwTerminate();
-}
-
-void MainWindow::debugWidget()
-{
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
-
-    ImGui::Text("This is a test.");
-    ImGui::Text("Framebuffer size: %d x %d", w, h);
-    ImGui::Text("Current Bezier rank: %s", ranks[rankIndex]);
-    ImGui::Text("Current Display type: %s", bezierTypes[bezierIndex]);
-}
-
-void MainWindow::settingWidget()
-{
-    if (ImGui::Begin("setting"))
-    {
-        ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
-
-        // 设置阶数
-        ImGui::Combo("Bezier Ranks", &rankIndex, ranks, IM_ARRAYSIZE(ranks));
-        // 设置显示类型
-        if (ImGui::Combo("Display Status", &bezierIndex, bezierTypes, IM_ARRAYSIZE(bezierTypes)))
-        {
-            if (bezierIndex == BEZIER_LINE)
-            {
-                projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
-                model = glm::mat4(1.0f);
-            }
-            else if (bezierIndex == BEZIER_SURFACE)
-            {
-                float aspect = float(width) / float(height); // 宽高比
-                float near = 0.1f;                           // 近裁剪面
-                float far = 100.0f;                          // 远裁剪面
-                projection = glm::perspective(glm::radians(fov), aspect, near, far);
-            }
-            shader->setMatrix4f("projection", projection);
-            shader->setMatrix4f("model", model);
-        }
-        ImGui::PopItemWidth(); // 恢复之前的宽度
-
-        ImGui::PushItemWidth(120); // 设置接下来的控件宽度为120
-        // 设置视野范围
-        if (ImGui::SliderFloat("fov", &fov, 30.0f, 120.0f))
-        {
-            if (bezierIndex == BEZIER_LINE)
-            {
-                projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
-            }
-            else if (bezierIndex == BEZIER_SURFACE)
-            {
-                float aspect = float(width) / float(height); // 宽高比
-                float near = 0.1f;                           // 近裁剪面
-                float far = 100.0f;                          // 远裁剪面
-                projection = glm::perspective(glm::radians(fov), aspect, near, far);
-            }
-            shader->setMatrix4f("projection", projection);
-        }
-        ImGui::PopItemWidth(); // 恢复之前的宽度
-
-    }// end setting
-    ImGui::End();
 }
 
 void MainWindow::show()
@@ -170,32 +121,61 @@ void MainWindow::show()
     }
 }
 
+void MainWindow::debugWidget()
+{
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+
+    ImGui::Text("This is a test.");
+    ImGui::Text("Framebuffer size: %d x %d", w, h);
+    ImGui::Text("Current Bezier rank: %s", ranks[rankIndex]);
+    ImGui::Text("Current Display type: %s", bezierTypes[bezierIndex]);
+}
+
+void MainWindow::settingWidget()
+{
+    if (ImGui::Begin("setting"))
+    {
+        ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
+        // 设置阶数
+        ImGui::Combo("Bezier Ranks", &rankIndex, ranks, IM_ARRAYSIZE(ranks));
+        if (ImGui::Combo("Display Status", &bezierIndex, bezierTypes, IM_ARRAYSIZE(bezierTypes)))
+        {
+            switchType();
+        }
+        ImGui::PopItemWidth(); // 恢复之前的宽度
+
+        ImGui::PushItemWidth(120); // 设置接下来的控件宽度为120
+        // 设置视野范围
+        if (ImGui::SliderFloat("fov", &fov, 30.0f, 120.0f))
+        {
+            switchType();
+        }
+        ImGui::PopItemWidth(); // 恢复之前的宽度
+
+    }// end setting
+    ImGui::End();
+}
+
 void MainWindow::render1()
 {
-    // 绘制控制点
     for (int i = 0; i < rankIndex + 3; i++)
     {
         drawCircle(c_points[i * 3], c_points[i * 3 + 1], 8.0f, 16);
     }
-    // 计算并绘制贝塞尔曲线
-    std::vector<float> vertices;
-    bezierCurve(c_points, rankIndex + 3, vertices, 0.02f); // 50步进
 
-    unsigned int VAO, VBO;
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    // 绑定信息
+    vbuffer.clear();
+    bezierCurve(c_points, rankIndex + 3, vbuffer, 0.02f); // 50步进
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // 上传顶点数据到VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
-    // 指定顶点属性
+    glBindVertexArray(VAO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer.size(), vbuffer.data(), GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    glDrawArrays(GL_LINE_STRIP, 0, (int)vertices.size() / 3);
-
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    // 绘制
+    glDrawArrays(GL_LINE_STRIP, 0, (int)vbuffer.size() / 3);
 
     // 鼠标处理
     if (ImGui::IsMouseClicked(0) && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
@@ -266,8 +246,20 @@ void MainWindow::render2()
                 vbuffer3D.insert(vbuffer3D.end(), quadVertices[3].begin(), quadVertices[3].end());
             }
         }
+
+        glBindVertexArray(VAO3D);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer3D.size(), vbuffer3D.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
+
         modfiy3D = false;
     }
+
+    // 绘制线框图
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glDrawArrays(GL_TRIANGLES, 0, (int)vbuffer3D.size() / 3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (ImGui::IsMouseDragging(0)) // 0 是左键，1 是右键
     {
@@ -286,10 +278,8 @@ void MainWindow::render2()
         model = rotate_x * rotate_y * model;
         shader->setMatrix4f("model", model);
     }
-
     // 获取ImGui的IO对象
     ImGuiIO &io = ImGui::GetIO();
-
     // 如果滚轮有滚动
     if (io.MouseWheel != 0)
     {
@@ -298,53 +288,49 @@ void MainWindow::render2()
         view = glm::lookAt(glm::vec3(0.0f, 0.0f, distance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         shader->setMatrix4f("view", view);
     }
+}
 
-    // 待优化
-    unsigned int VAO, VBO;
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // 上传顶点数据到VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer3D.size(), vbuffer3D.data(), GL_DYNAMIC_DRAW);
-    // 指定顶点属性
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
+void MainWindow::switchType()
+{
+    if (bezierIndex == BEZIER_LINE)
+    {
+        projection = glm::ortho(-width / 2 * 1.0f, width / 2 * 1.0f, -height / 2 * 1.0f, height / 2 * 1.0f, 0.1f, 10.0f);
+        model = glm::mat4(1.0f);
 
-    // 绘制线框图
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDrawArrays(GL_TRIANGLES, 0, (int)vbuffer3D.size() / 3);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindVertexArray(VAO);
+    }
+    else if (bezierIndex == BEZIER_SURFACE)
+    {
+        float aspect = float(width) / float(height); // 宽高比
+        float near = 0.1f;                           // 近裁剪面
+        float far = 100.0f;                          // 远裁剪面
+        projection = glm::perspective(glm::radians(fov), aspect, near, far);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+        glBindVertexArray(VAO3D);
+    }
+    shader->setMatrix4f("projection", projection);
+    shader->setMatrix4f("model", model);
 }
 
 void MainWindow::drawCircle(float x, float y, float radius, int nums)
 {
-    std::vector<float> vertexData;
-    vertexData.push_back(x); // center x
-    vertexData.push_back(y); // center y
+    vbuffer.clear();
+    vbuffer.push_back(x); // center x
+    vbuffer.push_back(y); // center y
 
     for (int i = 0; i <= nums; ++i)
     {
-        vertexData.push_back(x + (radius * cos(i * 2.0f * 3.14f / nums)));
-        vertexData.push_back(y + (radius * sin(i * 2.0f * 3.14f / nums)));
+        vbuffer.push_back(x + (radius * cos(i * 2.0f * 3.14f / nums)));
+        vbuffer.push_back(y + (radius * sin(i * 2.0f * 3.14f / nums)));
     }
 
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
-
+    glBindVertexArray(VAO);
+    glBufferData(GL_ARRAY_BUFFER, vbuffer.size() * sizeof(float), &vbuffer[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, nums + 2);
-
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
 }

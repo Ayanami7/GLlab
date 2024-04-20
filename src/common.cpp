@@ -16,7 +16,7 @@ int combination(int n, int k)
 // 计算贝塞尔曲线上的点
 void bezierCurve(std::vector<float> &points,int n, std::vector<float> &vertices, float step)
 {
-    if(points.size() < 6)
+    if(points.size() < 9)
         return;
     n = n - 1;
     for (float t = 0; t <= 1; t += step)
