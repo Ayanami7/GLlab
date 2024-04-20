@@ -5,19 +5,19 @@ Bezier曲面生成
 
 ```
 GLlab2
-    |--bin						//二进制文件
-    	|--Debug				//默认工作目录
+    |--bin
+    	|--Debug
     	|--Release
-    |--ext						//第三方库目录
-    |--shader					//着色器文件
-    |--src                      //源码
+    |--ext
+    |--shader
+    |--src
         |--common.h
         |--common.cpp
         |--loadShader.h
 		...
         |--main.cpp
-    .editorconfig				//格式配置文件
-    CMakeLists.txt				//CMake文件
+    .editorconfig
+    CMakeLists.txt
 ```
 程序使用CMake构建，工程内包含全部的外部依赖  
 
@@ -28,7 +28,7 @@ cmake -S . -B build
 cd build
 cmake --build . --config Debug -j 8
 ```
-
+默认工作目录位于`/bin/Debug`目录下
 
 
 ##### 使用的第三方库
