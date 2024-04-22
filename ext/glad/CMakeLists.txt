@@ -1,4 +1,4 @@
-add_library(glad
+add_library(glad STATIC
     src/glad.c
     include/glad/glad.h
     include/KHR/khrplatform.h

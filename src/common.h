@@ -2,12 +2,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <iostream>
 #include <vector>
+#include <string>
+#include <optional>
 
-int combination(int n, int k);
+#define PI 3.14f
 
-void bezierCurve(std::vector<float> &points, std::vector<float> &vertices, float step);
+using std::string;
+using std::vector;
+using glm::vec3;
+using glm::vec2;
+using glm::vec4;
+using glm::mat4;

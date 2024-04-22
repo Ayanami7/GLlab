@@ -3,7 +3,6 @@ project(vkproj)
 
 set(CMAKE_CXX_STANDARD 17)
 
-
 file(MAKE_DIRECTORY bin/Debug)
 file(MAKE_DIRECTORY bin/Release)
 file(MAKE_DIRECTORY bin/spirv)
@@ -20,6 +19,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/ext/glad)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/glfw)
 #编译imgui
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/imgui)
+#添加stb
+add_subdirectory(${CMAKE_SOURCE_DIR}/ext/stb)
 
 add_executable(obj
     src/main.cpp
@@ -29,10 +30,18 @@ add_executable(obj
     src/widget.cpp
     src/loadShader.h
     src/loadShader.cpp
+    src/model.h
+    src/model.cpp
+    src/pipeline.h
+    src/pipeline.cpp
+    src/texture.h
+    src/texture.cpp
 )
+
 target_compile_options(obj PUBLIC /utf-8) # MSVC unicode support
 add_dependencies(obj imgui)
 add_dependencies(obj glad)
+add_dependencies(obj stb)
 
 target_include_directories(obj
 PUBLIC
@@ -41,6 +50,7 @@ PUBLIC
     ${IMGUI_INCLUDE}
 )
 
+target_link_libraries(obj PUBLIC stb)
 target_link_libraries(obj PUBLIC imgui)
 target_link_libraries(obj PUBLIC glad)
 target_link_libraries(obj PUBLIC glfw)
