@@ -30,12 +30,10 @@ add_executable(obj
     src/widget.cpp
     src/loadShader.h
     src/loadShader.cpp
-    src/model.h
-    src/model.cpp
+    src/mesh.h
+    src/mesh.cpp
     src/pipeline.h
     src/pipeline.cpp
-    src/texture.h
-    src/texture.cpp
 )
 
 target_compile_options(obj PUBLIC /utf-8) # MSVC unicode support

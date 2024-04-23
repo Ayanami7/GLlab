@@ -11,7 +11,21 @@
 
 using std::string;
 using std::vector;
-using glm::vec3;
-using glm::vec2;
-using glm::vec4;
-using glm::mat4;
+
+struct Vertex
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 texCoords;
+};
+
+struct Texture
+{
+    unsigned int ID;
+    string type;
+    Texture(const string path, const string type = "diffuse");
+    ~Texture();
+    void bind();
+    void unbind();
+    inline unsigned int getID() { return ID; }
+};

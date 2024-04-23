@@ -23,20 +23,17 @@ void MainWindow::init()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // 启用键盘控制
 
     pipeline = new Pipeline();
-    pipeline->init();
-    model = new Model("../../resource/model/cow.obj");
-    model->loadTexture("../../resource/texture/cow.png");
+    mmodel = new Model("../../resource/model/cow.obj");
 
     float aspect = static_cast<float>(width) / height;
     float near = 0.1f;  // 近裁剪面
     float far = 100.0f; // 远裁剪面
-    mat4 projection = glm::perspective(glm::radians(fov), aspect, near, far);
-    mat4 view = mat4(1.0f); // make sure to initialize matrix to identity matrix first
-    view = glm::lookAt(vec3(0.0f, 0.0f, cameraDistance), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-    mat4 model = mat4(1.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, near, far);
+    glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, cameraDistance), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 model = glm::mat4(1.0f);
 
     Shader *shader = new Shader("../../shader/default_vert.glsl", "../../shader/default_frag.glsl");
-
 
     pipeline->setShader(shader);
     shader->setMatrix4f("projection", projection);
@@ -81,11 +78,12 @@ void MainWindow::settingWidget()
 
 void MainWindow::show()
 {
-    glEnable(GL_DEPTH_TEST);
-    pipeline->bind(model);
+    pipeline->bind(mmodel);
+    std::cout << sizeof(Vertex) << std::endl;
 
     while (!glfwWindowShouldClose(window))
     {
+        glEnable(GL_DEPTH_TEST);
         glfwPollEvents();
 
         // 清除深度缓冲区

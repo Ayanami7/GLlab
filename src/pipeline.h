@@ -1,18 +1,17 @@
 #pragma once
 
 #include "common.h"
-#include "model.h"
+#include "mesh.h"
 #include "loadShader.h"
 
 class Pipeline
 {
 private:
     Shader *shader;
-    unsigned int vertex;
-    unsigned int normal;
-    unsigned int texCoord;
-    unsigned int VAO;
-    int vertexCount;
+    vector<unsigned int> VAO;
+    vector<unsigned int> VBO;
+    vector<unsigned int> EBO;
+    vector<unsigned int> vertexCounts;
     bool binded = false;
 
 public:
@@ -21,7 +20,6 @@ public:
     void setShader(Shader *shader);
     Shader* getShader();
     void bind(Model *model);
-    void init();
     void draw();
 
 };

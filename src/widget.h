@@ -16,7 +16,7 @@ private:
     Pipeline *pipeline;
 
     // 暂时放在这 可能有后续抽象
-    Model *model;
+    Model *mmodel;
     
 public:
     int height, width;
