@@ -2,9 +2,8 @@
 
 #include "common.h"
 
-Texture::Texture(const string path, string type)
+Texture::Texture(const string path)
 {
-    this->type = type;
     // 使用 stb_image.h 加载图片
     unsigned char *image;
     int width, height, nrChannels;

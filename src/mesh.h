@@ -7,9 +7,31 @@ struct Mesh
 {
     vector<Vertex> vertices;
     vector<unsigned int> indices;
+    Material material;
     std::optional<Texture> texture;
-    Mesh(vector<Vertex> vertices, vector<unsigned int> indices)
+    Mesh(vector<Vertex> vertices, vector<unsigned int> indices, MaterialType type = MaterialType::DIFFUSE)
     {
+        if (type == MaterialType::DIFFUSE)
+        {
+            material.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.ambient = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.shininess = 32.0f;
+        }
+        else if (type == MaterialType::SPECULAR)
+        {
+            material.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.ambient = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+            material.shininess = 64.0f;
+        }
+        else if (type == MaterialType::AMBIENT)
+        {
+            material.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.ambient = glm::vec3(1.0f, 1.0f, 1.0f);
+            material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+            material.shininess = 32.0f;
+        }
         this->vertices = vertices;
         this->indices = indices;
     }

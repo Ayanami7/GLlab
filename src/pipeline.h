@@ -12,7 +12,11 @@ private:
     vector<unsigned int> VBO;
     vector<unsigned int> EBO;
     vector<unsigned int> vertexCounts;
+    vector<Material> materials;
+    vector<std::optional<Texture>> textures;
+    int meshCount;
     bool binded = false;
+
 
 public:
     bool polygonMode = false;

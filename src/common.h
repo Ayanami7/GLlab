@@ -13,6 +13,13 @@
 using std::string;
 using std::vector;
 
+enum MaterialType
+{
+    DIFFUSE,
+    SPECULAR,
+    AMBIENT
+};
+
 struct Vertex
 {
     glm::vec3 position;
@@ -24,9 +31,25 @@ struct Texture
 {
     unsigned int ID;
     string type;
-    Texture(const string path, const string type = "diffuse");
+    Texture(const string path);
     ~Texture();
     void bind();
     void unbind();
     inline unsigned int getID() { return ID; }
+};
+
+struct Material
+{
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float shininess;
+};
+
+struct Light
+{
+    glm::vec3 position;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
 };

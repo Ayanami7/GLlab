@@ -28,23 +28,34 @@ void MainWindow::init()
 
     // 计算MVP矩阵
     float aspect = static_cast<float>(width) / height;
-    float near = 0.1f;  // 近裁剪面
-    float far = 100.0f; // 远裁剪面
-    projection = glm::perspective(glm::radians(fov), aspect, near, far);
+    projection = glm::perspective(glm::radians(fov), aspect, zNear, zFar);
     view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     view = glm::lookAt(this->cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::mat4(1.0f);
 
-    Shader *shader = new Shader("../../shader/default_vert.glsl", "../../shader/default_frag.glsl");
+    // 创建一些必要信息
+    light.position = glm::vec3(1.2f, 1.0f, 2.0f);
+    light.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+    light.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+    light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    pipeline->setShader(shader);
-    shader->setMatrix4f("projection", projection);
-    shader->setMatrix4f("view", view);
-    shader->setMatrix4f("model", model);
+    // 创建着色器
+    Shader *defaultShader = new Shader("../../shader/default.vert", "../../shader/default.frag");
+    Shader *phongShader = new Shader("../../shader/material.vert", "../../shader/material.frag");
+
+    pipeline->setShader(phongShader);
+    pipeline->getShader()->setMatrix4f("projection", projection);
+    pipeline->getShader()->setMatrix4f("view", view);
+    pipeline->getShader()->setMatrix4f("model", model);
+    pipeline->getShader()->setVec3f("light.position", light.position);
+    pipeline->getShader()->setVec3f("light.ambient", light.ambient);
+    pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
+    pipeline->getShader()->setVec3f("light.specular", light.specular);
+    pipeline->getShader()->setVec3f("viewPos", cameraPos);
 
     // 设置 ImGui 风格
     ImGui::StyleColorsDark();
-
+    
     // 设置 ImGui 平台/渲染器绑定
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -75,7 +86,7 @@ void MainWindow::settingWidget()
 {
     if (ImGui::Begin("setting"))
     {
-        
+        ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
     }
     ImGui::End();
 }

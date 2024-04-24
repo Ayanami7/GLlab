@@ -13,7 +13,9 @@ private:
     GLFWwindow *window = nullptr;
     const char *title;
     const char *glsl_version = "#version 130";
-    Pipeline *pipeline;
+    Pipeline *pipeline;     //渲染管线
+
+    // 视角参数
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
     glm::mat4 model;
     glm::mat4 view;
@@ -21,11 +23,14 @@ private:
 
     // 暂时放在这 可能有后续抽象
     Model *mmodel;
-    
+    Light light;
+
 public:
     int height, width;
     float fov = 45.0f;
-    float zoom_speed = 0.3f;
+    float zoom_speed = 0.1f;
+    float zNear = 0.1f;
+    float zFar = 20.0f;
 
 private:
     void debugWidget();                                         //调试窗口

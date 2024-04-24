@@ -14,7 +14,7 @@ Shader* Pipeline::getShader()
 void Pipeline::bind(Model *model)
 {
     // 删除原有的 VAO, VBO, EBO
-    int meshCount = model->meshCount;
+    meshCount = model->meshCount;
     if(binded)
     {
         if (VAO.size() > 0)
@@ -26,6 +26,8 @@ void Pipeline::bind(Model *model)
             VBO.clear();
             EBO.clear();
             vertexCounts.clear();
+            materials.clear();
+            textures.clear();
         }
     }
     binded = true;
@@ -35,6 +37,9 @@ void Pipeline::bind(Model *model)
     VBO.resize(meshCount);
     EBO.resize(meshCount);
     vertexCounts.resize(meshCount);
+    materials.resize(meshCount);
+    textures.resize(meshCount);
+
     glGenVertexArrays(meshCount, VAO.data());
     glGenBuffers(meshCount, VBO.data());
     glGenBuffers(meshCount, EBO.data());
@@ -59,6 +64,15 @@ void Pipeline::bind(Model *model)
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 
         vertexCounts[i] = static_cast<unsigned int>(model->meshes[i].indices.size());
+        materials[i] = model->meshes[i].material;
+        if (model->meshes[i].texture.has_value())
+        {
+            textures.push_back(model->meshes[i].texture);
+        }
+        else
+        {
+            textures.push_back(std::nullopt);
+        }
     }
 }
 
@@ -69,8 +83,13 @@ void Pipeline::draw()
         throw std::runtime_error("Pipeline has not binded yet.");
     }
 
-    for (int i = 0; i <vertexCounts.size(); i++)
+    // 绘制meshCount个mesh
+    for (int i = 0; i < meshCount; i++)
     {
+        shader->setVec3f("material.ambient", materials[i].ambient);
+        shader->setVec3f("material.diffuse", materials[i].diffuse);
+        shader->setVec3f("material.specular", materials[i].specular);
+        shader->setFloat("material.shininess", materials[i].shininess);
         glBindVertexArray(VAO[i]);
         if (polygonMode)
         {
