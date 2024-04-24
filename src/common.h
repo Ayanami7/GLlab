@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <optional>

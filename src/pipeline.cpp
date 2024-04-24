@@ -31,10 +31,10 @@ void Pipeline::bind(Model *model)
     binded = true;
 
     // 创建新的 VAO, VBO, EBO
-    VAO.resize(model->meshes.size());
-    VBO.resize(model->meshes.size());
-    EBO.resize(model->meshes.size());
-    vertexCounts.resize(model->meshes.size());
+    VAO.resize(meshCount);
+    VBO.resize(meshCount);
+    EBO.resize(meshCount);
+    vertexCounts.resize(meshCount);
     glGenVertexArrays(meshCount, VAO.data());
     glGenBuffers(meshCount, VBO.data());
     glGenBuffers(meshCount, EBO.data());
@@ -72,8 +72,15 @@ void Pipeline::draw()
     for (int i = 0; i <vertexCounts.size(); i++)
     {
         glBindVertexArray(VAO[i]);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        if (polygonMode)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
+        }
+        else
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
+        }
     }
 }

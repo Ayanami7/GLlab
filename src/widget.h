@@ -14,18 +14,23 @@ private:
     const char *title;
     const char *glsl_version = "#version 130";
     Pipeline *pipeline;
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 projection;
 
     // 暂时放在这 可能有后续抽象
     Model *mmodel;
     
 public:
     int height, width;
-    float cameraDistance = 3.0f;
     float fov = 45.0f;
+    float zoom_speed = 0.3f;
 
 private:
     void debugWidget();                                         //调试窗口
     void settingWidget();                                       //设置窗口
+    void mouseHandle();                                         //鼠标处理
 
 public:
     MainWindow(int w = 1280, int h = 720, const char *t = "ImGui OpenGL")

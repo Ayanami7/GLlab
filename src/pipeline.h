@@ -15,7 +15,9 @@ private:
     bool binded = false;
 
 public:
-    Pipeline(){};
+    bool polygonMode = false;
+public:
+    Pipeline(){}
     ~Pipeline(){}
     void setShader(Shader *shader);
     Shader* getShader();

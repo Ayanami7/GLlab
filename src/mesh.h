@@ -23,7 +23,9 @@ struct Mesh
 struct Model
 {
     vector<Mesh> meshes;
-    int meshCount;
+    int meshCount = 0;
+    int vertexCount = 0;
+    int faceCount = 0;
     void setAllTexture(Texture tex);
     Model(const string path);
     ~Model();

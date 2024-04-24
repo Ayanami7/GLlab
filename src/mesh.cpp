@@ -12,31 +12,37 @@ Model::Model(const string path)
     {
         throw std::runtime_error(err);
     }
+
     for (const auto &shape : shapes)
     {
         vector<Vertex> vertices;
         vector<unsigned int> indices;
-        for (int i = 0; i < attrib.vertices.size() / 3; i++)
-        {
-            Vertex vertex;
-            vertex.position = {attrib.vertices[3 * i + 0],
-                               attrib.vertices[3 * i + 1],
-                               attrib.vertices[3 * i + 2]};
-            vertex.normal = {attrib.normals[3 * i + 0],
-                             attrib.normals[3 * i + 1],
-                             attrib.normals[3 * i + 2]};
-            vertex.texCoords = {attrib.texcoords[2 * i + 0], attrib.texcoords[2 * i + 1]};
-            vertices.push_back(vertex);
-        }
-        
-        // 此处假设所有索引都是一样的
         for (const auto &index : shape.mesh.indices)
         {
-            indices.push_back(index.vertex_index);
+            Vertex vertex;
+            vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+                               attrib.vertices[3 * index.vertex_index + 1],
+                               attrib.vertices[3 * index.vertex_index + 2]};
+            vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+                             attrib.normals[3 * index.normal_index + 1],
+                             attrib.normals[3 * index.normal_index + 2]};
+            vertex.texCoords = {attrib.texcoords[2 * index.texcoord_index + 0],
+                                attrib.texcoords[2 * index.texcoord_index + 1]};
+
+            vertices.push_back(vertex);
+        }
+        for (unsigned int i = 0; i < shape.mesh.indices.size(); i++)
+        {
+            indices.push_back(i);
         }
         meshes.push_back(Mesh(vertices, indices));
     }
-    meshCount = meshes.size();
+    for(auto mesh : meshes)
+    {
+        vertexCount += static_cast<int>(mesh.vertices.size());
+        faceCount += static_cast<int>(mesh.indices.size() / 3);
+    }
+    meshCount = static_cast<int>(meshes.size());
 }
 
 void Model::setAllTexture(Texture tex)
