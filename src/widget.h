@@ -15,11 +15,20 @@ private:
     const char *glsl_version = "#version 130";
     Pipeline *pipeline;     //渲染管线
 
+    // 用于控件:
+    const char *shaderType[3] = {"default", "phong", "texture"};
+    int shaderIndex = 2;
+
+    // 着色器文件
+    Shader *defaultShader;
+    Shader *phongShader;
+    Shader *textureShader;
+
     // 视角参数
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 projection;
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
 
     // 暂时放在这 可能有后续抽象
     Model *mmodel;
@@ -44,6 +53,7 @@ public:
     }
     ~MainWindow() {}
     void init();
+    void checkShader();
     void show();
     void destroy();
 };

@@ -27,14 +27,20 @@ struct Vertex
     glm::vec2 texCoords;
 };
 
-struct Texture
+class Texture
 {
+private:
     unsigned int ID;
     string type;
+    unsigned char *image;
+    int width;
+    int height;
+    int nrChannels;
+public:
     Texture(const string path);
     ~Texture();
-    void bind();
-    void unbind();
+    void load();
+    void unload();
     inline unsigned int getID() { return ID; }
 };
 
@@ -44,6 +50,7 @@ struct Material
     glm::vec3 diffuse;
     glm::vec3 specular;
     float shininess;
+    std::optional<Texture*> texture;
 };
 
 struct Light

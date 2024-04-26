@@ -10,7 +10,8 @@ class Shader
 {
 public:
     unsigned int ID;
-    Shader(const char *vertexPath, const char *fragmentPath);
+    string shaderName;
+    Shader(const char *vertexPath, const char *fragmentPath, string name);
     void use();     //激活shader
     void remove();   //关闭shader
     void setBool(const std::string &name, bool value) const;  

@@ -13,23 +13,7 @@ Shader* Pipeline::getShader()
 
 void Pipeline::bind(Model *model)
 {
-    // 删除原有的 VAO, VBO, EBO
     meshCount = model->meshCount;
-    if(binded)
-    {
-        if (VAO.size() > 0)
-        {
-            glDeleteVertexArrays(int(VAO.size()), VAO.data());
-            glDeleteBuffers(int(VBO.size()), VBO.data());
-            glDeleteBuffers(int(EBO.size()), EBO.data());
-            VAO.clear();
-            VBO.clear();
-            EBO.clear();
-            vertexCounts.clear();
-            materials.clear();
-            textures.clear();
-        }
-    }
     binded = true;
 
     // 创建新的 VAO, VBO, EBO
@@ -38,7 +22,6 @@ void Pipeline::bind(Model *model)
     EBO.resize(meshCount);
     vertexCounts.resize(meshCount);
     materials.resize(meshCount);
-    textures.resize(meshCount);
 
     glGenVertexArrays(meshCount, VAO.data());
     glGenBuffers(meshCount, VBO.data());
@@ -65,15 +48,47 @@ void Pipeline::bind(Model *model)
 
         vertexCounts[i] = static_cast<unsigned int>(model->meshes[i].indices.size());
         materials[i] = model->meshes[i].material;
-        if (model->meshes[i].texture.has_value())
+    }
+
+    for (int i = 0; i < meshCount; i++)
+    {
+        // 检查mesh是否有纹理
+        if (model->meshes[i].material.texture.has_value())
         {
-            textures.push_back(model->meshes[i].texture);
-        }
-        else
-        {
-            textures.push_back(std::nullopt);
+            // 激活纹理单元i
+            glActiveTexture(GL_TEXTURE0 + i);
+            // 绑定纹理并上传到GPU
+            model->meshes[i].material.texture.value()->load();
+            loadedTextures.push_back(model->meshes[i].material.texture.value());
         }
     }
+}
+
+// 清除资源
+void Pipeline::clear()
+{
+    // 清除GPU中的资源
+    for (auto texture : loadedTextures)
+    {
+        texture->unload();
+    }
+    // 删除原有的 VAO, VBO, EBO
+    if(binded)
+    {
+        if (VAO.size() > 0)
+        {
+            glDeleteVertexArrays(int(VAO.size()), VAO.data());
+            glDeleteBuffers(int(VBO.size()), VBO.data());
+            glDeleteBuffers(int(EBO.size()), EBO.data());
+            VAO.clear();
+            VBO.clear();
+            EBO.clear();
+            loadedTextures.clear();
+            vertexCounts.clear();
+            materials.clear();
+        }
+    }
+    binded = false;
 }
 
 void Pipeline::draw()
@@ -86,20 +101,43 @@ void Pipeline::draw()
     // 绘制meshCount个mesh
     for (int i = 0; i < meshCount; i++)
     {
-        shader->setVec3f("material.ambient", materials[i].ambient);
-        shader->setVec3f("material.diffuse", materials[i].diffuse);
-        shader->setVec3f("material.specular", materials[i].specular);
-        shader->setFloat("material.shininess", materials[i].shininess);
         glBindVertexArray(VAO[i]);
+        if (shader->shaderName == "texture")
+        {
+            // 启用第i个纹理单元
+            glActiveTexture(GL_TEXTURE0 + i);
+            shader->setInt("material.diffuse", i);
+            shader->setVec3f("material.specular", materials[i].specular);
+            shader->setFloat("material.shininess", materials[i].shininess);
+        }
+        else if(shader->shaderName == "phong")
+        {
+            shader->setVec3f("material.ambient", materials[i].ambient);
+            shader->setVec3f("material.diffuse", materials[i].diffuse);
+            shader->setVec3f("material.specular", materials[i].specular);
+            shader->setFloat("material.shininess", materials[i].shininess);
+        }
+        else if (shader->shaderName == "default")
+        {
+            // 空操作
+        }
+        else
+        {
+            throw std::runtime_error("Unknown shader.");
+        }
+
+        // 是否绘制线框
         if (polygonMode)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
+
         }
         else
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
         }
+
     }
 }

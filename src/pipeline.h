@@ -13,7 +13,7 @@ private:
     vector<unsigned int> EBO;
     vector<unsigned int> vertexCounts;
     vector<Material> materials;
-    vector<std::optional<Texture>> textures;
+    vector<Texture*> loadedTextures;
     int meshCount;
     bool binded = false;
 
@@ -25,7 +25,9 @@ public:
     ~Pipeline(){}
     void setShader(Shader *shader);
     Shader* getShader();
+    void initShader();
     void bind(Model *model);
     void draw();
+    void clear();
 
 };

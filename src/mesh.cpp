@@ -45,7 +45,7 @@ Model::Model(const string path)
     meshCount = static_cast<int>(meshes.size());
 }
 
-void Model::setAllTexture(Texture tex)
+void Model::setAllTexture(Texture *tex)
 {
     for(auto &mesh : meshes)
     {

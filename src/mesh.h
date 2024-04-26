@@ -8,7 +8,6 @@ struct Mesh
     vector<Vertex> vertices;
     vector<unsigned int> indices;
     Material material;
-    std::optional<Texture> texture;
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, MaterialType type = MaterialType::DIFFUSE)
     {
         if (type == MaterialType::DIFFUSE)
@@ -36,9 +35,9 @@ struct Mesh
         this->indices = indices;
     }
     ~Mesh(){};
-    inline void loadTexture(Texture tex)        //加载纹理但并不启用
+    inline void loadTexture(Texture *tex)        //加载纹理但并不启用
     {
-        this->texture = tex;
+        this->material.texture = tex;
     }
 };
 
@@ -48,7 +47,7 @@ struct Model
     int meshCount = 0;
     int vertexCount = 0;
     int faceCount = 0;
-    void setAllTexture(Texture tex);
+    void setAllTexture(Texture *tex);
     Model(const string path);
     ~Model();
 };

@@ -25,13 +25,17 @@ void MainWindow::init()
     // 创建管线和模型
     pipeline = new Pipeline();
     mmodel = new Model("../../resource/model/cow.obj");
+    Texture *texture = new Texture("../../resource/texture/cow.png");
+    mmodel->setAllTexture(texture);
 
+    // 初始的视角矩阵
     // 计算MVP矩阵
     float aspect = static_cast<float>(width) / height;
     projection = glm::perspective(glm::radians(fov), aspect, zNear, zFar);
     view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     view = glm::lookAt(this->cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::mat4(1.0f);
+
 
     // 创建一些必要信息
     light.position = glm::vec3(1.2f, 1.0f, 2.0f);
@@ -40,18 +44,12 @@ void MainWindow::init()
     light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
 
     // 创建着色器
-    Shader *defaultShader = new Shader("../../shader/default.vert", "../../shader/default.frag");
-    Shader *phongShader = new Shader("../../shader/material.vert", "../../shader/material.frag");
+    defaultShader = new Shader("../../shader/default.vert", "../../shader/default.frag", "default");
+    phongShader = new Shader("../../shader/phong.vert", "../../shader/phong.frag", "phong");
+    textureShader = new Shader("../../shader/texture.vert", "../../shader/texture.frag", "texture");
 
-    pipeline->setShader(phongShader);
-    pipeline->getShader()->setMatrix4f("projection", projection);
-    pipeline->getShader()->setMatrix4f("view", view);
-    pipeline->getShader()->setMatrix4f("model", model);
-    pipeline->getShader()->setVec3f("light.position", light.position);
-    pipeline->getShader()->setVec3f("light.ambient", light.ambient);
-    pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
-    pipeline->getShader()->setVec3f("light.specular", light.specular);
-    pipeline->getShader()->setVec3f("viewPos", cameraPos);
+    pipeline->setShader(textureShader);
+    checkShader();      // 检查shader
 
     // 设置 ImGui 风格
     ImGui::StyleColorsDark();
@@ -87,6 +85,19 @@ void MainWindow::settingWidget()
     if (ImGui::Begin("setting"))
     {
         ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
+        ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
+        // 设置阶数
+        if (ImGui::Combo("Shader Type", &shaderIndex, shaderType, IM_ARRAYSIZE(shaderType)))
+        {
+            if(shaderIndex == 0)
+                pipeline->setShader(defaultShader);
+            else if(shaderIndex == 1)
+                pipeline->setShader(phongShader);
+            else if(shaderIndex == 2)
+                pipeline->setShader(textureShader);
+            checkShader();
+        }
+        ImGui::PopItemWidth(); // 恢复之前的宽度
     }
     ImGui::End();
 }
@@ -94,7 +105,6 @@ void MainWindow::settingWidget()
 void MainWindow::show()
 {
     pipeline->bind(mmodel);
-    std::cout << sizeof(Vertex) << std::endl;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -162,3 +172,18 @@ void MainWindow::mouseHandle()
     }
 }
 
+// 提供一些必要的信息给shader
+// 还有部分信息由Model提供
+void MainWindow::checkShader()
+{
+    // 通用的MVP变换
+    pipeline->getShader()->setMatrix4f("projection", projection);
+    pipeline->getShader()->setMatrix4f("view", view);
+    pipeline->getShader()->setMatrix4f("model", model);
+    pipeline->getShader()->setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    pipeline->getShader()->setVec3f("light.position", light.position);
+    pipeline->getShader()->setVec3f("light.ambient", light.ambient);
+    pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
+    pipeline->getShader()->setVec3f("light.specular", light.specular);
+    pipeline->getShader()->setVec3f("viewPos", cameraPos);
+}

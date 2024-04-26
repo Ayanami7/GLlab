@@ -1,6 +1,6 @@
 #include "loadShader.h"
 
-Shader::Shader(const char *vertexPath, const char *fragmentPath)
+Shader::Shader(const char *vertexPath, const char *fragmentPath, string name) : shaderName(name)
 {
     std::string vertexCode;
     std::string fragmentCode;
