@@ -24,8 +24,8 @@ void MainWindow::init()
 
     // 创建管线和模型
     pipeline = new Pipeline();
-    mmodel = new Model("../../resource/model/cow.obj");
-    Texture *texture = new Texture("../../resource/texture/cow.png");
+    mmodel = new Model("../../resource/model/room.obj");
+    Texture *texture = new Texture("../../resource/texture/room.png");
     mmodel->setAllTexture(texture);
 
     // 初始的视角矩阵
@@ -44,12 +44,12 @@ void MainWindow::init()
     light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
 
     // 创建着色器
-    defaultShader = new Shader("../../shader/default.vert", "../../shader/default.frag", "default");
     phongShader = new Shader("../../shader/phong.vert", "../../shader/phong.frag", "phong");
     textureShader = new Shader("../../shader/texture.vert", "../../shader/texture.frag", "texture");
 
-    pipeline->setShader(textureShader);
+    pipeline->setShader(phongShader);
     checkShader();      // 检查shader
+    pipeline->bind(mmodel);
 
     // 设置 ImGui 风格
     ImGui::StyleColorsDark();
@@ -80,32 +80,91 @@ void MainWindow::debugWidget()
     ImGui::Text("Triangle count: %d", mmodel->faceCount);
 }
 
-void MainWindow::settingWidget()
+void MainWindow::settingWidget() 
 {
     if (ImGui::Begin("setting"))
     {
         ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
         ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
         // 设置阶数
-        if (ImGui::Combo("Shader Type", &shaderIndex, shaderType, IM_ARRAYSIZE(shaderType)))
+        if (ImGui::Combo("Shader Type", &ui_shaderIndex, ui_shaderType, IM_ARRAYSIZE(ui_shaderType)))
         {
-            if(shaderIndex == 0)
-                pipeline->setShader(defaultShader);
-            else if(shaderIndex == 1)
+            if(ui_shaderIndex == 0)
+            {
                 pipeline->setShader(phongShader);
-            else if(shaderIndex == 2)
+
+            }
+            else if(ui_shaderIndex == 1)
+            {
                 pipeline->setShader(textureShader);
+            }
             checkShader();
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
+
+        ImGui::Text(" ");
+        ImGui::Text("Light Position");
+        if(ImGui::Checkbox("Enable Light", &lightEnable))
+        {
+            checkShader();
+        }
+        if (lightEnable)
+        {
+            ImGui::PushItemWidth(120); // 设置接下来的控件宽度为150
+            bool t1 = ImGui::SliderFloat("X", &light.position.x, -3.0f, 3.0f);
+            bool t2 = ImGui::SliderFloat("Y", &light.position.y, -3.0f, 3.0f);
+            bool t3 = ImGui::SliderFloat("Z", &light.position.z, -3.0f, 3.0f);
+            ImGui::PopItemWidth();
+
+            ImGui::PushItemWidth(240);
+            bool t4 = ImGui::SliderFloat3("Ambient", &light.ambient[0], 0.0f, 1.0f);
+            bool t5 = ImGui::SliderFloat3("Diffuse", &light.diffuse[0], 0.0f, 1.0f);
+            bool t6 = ImGui::SliderFloat3("Specular", &light.specular[0], 0.0f, 1.0f);
+            ImGui::PopItemWidth();
+
+            if (t1 || t2 || t3 || t4 || t5 || t6)
+            {
+                checkShader();
+            }
+        }
     }
     ImGui::End();
+
+    for (int i = 0; i < mmodel->meshes.size(); ++i)
+    {
+        Mesh &mesh = mmodel->meshes[i];
+        Material &material = mesh.material;
+
+        std::string windowTitle = "Material Settings for Mesh " + std::to_string(i);
+        if (ImGui::Begin(windowTitle.c_str()))
+        {
+            bool t1 = ImGui::SliderFloat3("Ambient", &material.ambient[0], 0.0f, 1.0f);
+            bool t2 = ImGui::SliderFloat3("Diffuse", &material.diffuse[0], 0.0f, 1.0f);
+            bool t3 = ImGui::SliderFloat3("Specular", &material.specular[0], 0.0f, 1.0f);
+            bool t4 = ImGui::SliderFloat("Shininess", &material.shininess, 16.0f, 256.0f);
+
+            if (t1 || t2 || t3 || t4)
+            {
+                checkShader();
+                pipeline->bind(mmodel);
+            }
+
+            if (material.texture)
+            {
+                ImGui::Text("Texture is set.");
+                // 如果需要，你可以添加更多的代码来显示或修改纹理
+            }
+            else
+            {
+                ImGui::Text("No texture set.");
+            }
+        }
+        ImGui::End();
+    }
 }
 
 void MainWindow::show()
 {
-    pipeline->bind(mmodel);
-
     while (!glfwWindowShouldClose(window))
     {
         glEnable(GL_DEPTH_TEST);    // 启用深度测试
@@ -181,9 +240,18 @@ void MainWindow::checkShader()
     pipeline->getShader()->setMatrix4f("view", view);
     pipeline->getShader()->setMatrix4f("model", model);
     pipeline->getShader()->setVec3f("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    pipeline->getShader()->setVec3f("light.position", light.position);
-    pipeline->getShader()->setVec3f("light.ambient", light.ambient);
-    pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
-    pipeline->getShader()->setVec3f("light.specular", light.specular);
+    if (lightEnable)
+    {
+        pipeline->getShader()->setVec3f("light.position", light.position);
+        pipeline->getShader()->setVec3f("light.ambient", light.ambient);
+        pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
+        pipeline->getShader()->setVec3f("light.specular", light.specular);
+    }
+    else
+    {
+        pipeline->getShader()->setVec3f("light.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+        pipeline->getShader()->setVec3f("light.diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
+        pipeline->getShader()->setVec3f("light.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+    }
     pipeline->getShader()->setVec3f("viewPos", cameraPos);
 }

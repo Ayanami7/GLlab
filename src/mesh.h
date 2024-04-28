@@ -22,7 +22,7 @@ struct Mesh
             material.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
             material.ambient = glm::vec3(0.5f, 0.5f, 0.5f);
             material.specular = glm::vec3(1.0f, 1.0f, 1.0f);
-            material.shininess = 64.0f;
+            material.shininess = 128.0f;
         }
         else if (type == MaterialType::AMBIENT)
         {

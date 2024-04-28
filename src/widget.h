@@ -10,14 +10,17 @@
 class MainWindow
 {
 private:
-    GLFWwindow *window = nullptr;
+    GLFWwindow *window = nullptr; 
     const char *title;
     const char *glsl_version = "#version 130";
     Pipeline *pipeline;     //渲染管线
 
-    // 用于控件:
-    const char *shaderType[3] = {"default", "phong", "texture"};
-    int shaderIndex = 2;
+    // 用于控件
+    // 着色器选择框
+    const char *ui_shaderType[2] = {"Phong", "Texture"};
+    int ui_shaderIndex = 0;
+
+    bool lightEnable = true;
 
     // 着色器文件
     Shader *defaultShader;
