@@ -36,7 +36,10 @@ add_executable(obj
     src/pipeline.cpp
 )
 
-target_compile_options(obj PUBLIC /utf-8) # MSVC unicode support
+if (MSVC)
+    target_compile_options(obj PUBLIC /utf-8) # MSVC unicode support
+endif()
+
 add_dependencies(obj imgui)
 add_dependencies(obj glad)
 add_dependencies(obj stb)

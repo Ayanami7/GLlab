@@ -73,7 +73,9 @@ void MainWindow::debugWidget()
 {
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
-
+    // 设定初始位置和大小
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(270, 140));
     ImGui::Text("This is a test.");
     ImGui::Text("Framebuffer size: %d x %d", w, h);
     ImGui::Text("Vertex count: %d", mmodel->vertexCount);
@@ -82,6 +84,9 @@ void MainWindow::debugWidget()
 
 void MainWindow::settingWidget() 
 {
+    // 设定初始位置和大小
+    ImGui::SetNextWindowPos(ImVec2(float(width - 320), 0));
+    ImGui::SetNextWindowSize(ImVec2(320, 280));
     if (ImGui::Begin("setting"))
     {
         ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
@@ -130,6 +135,8 @@ void MainWindow::settingWidget()
     }
     ImGui::End();
 
+    ImGui::SetNextWindowPos(ImVec2(0, 200));
+    ImGui::SetNextWindowSize(ImVec2(300, 140));
     for (int i = 0; i < mmodel->meshes.size(); ++i)
     {
         Mesh &mesh = mmodel->meshes[i];

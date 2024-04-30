@@ -8,7 +8,9 @@
 #include <string>
 #include <optional>
 
-#define PI 3.14f
+#ifdef _MSC_VER
+    #define M_PI 3.14f
+#endif
 
 using std::string;
 using std::vector;
