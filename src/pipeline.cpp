@@ -50,16 +50,23 @@ void Pipeline::bind(Model *model)
         materials[i] = model->meshes[i].material;
     }
 
-    for (int i = 0; i < meshCount; i++)
+    this->loadedTextures = model->loadedTextures;
+    for(int i = 0; i < loadedTextures.size(); i++)
     {
-        // 检查mesh是否有纹理
-        if (model->meshes[i].material.texture.has_value())
+        glActiveTexture(GL_TEXTURE0 + i);
+        loadedTextures[i].bind();
+    }
+
+    meshToTextureIndice.resize(meshCount);
+    for(int i = 0; i < meshCount; i++)
+    {
+        for(int j = 0; j < model->meshes[i].material.textures.size(); j++)
         {
-            // 激活纹理单元i
-            glActiveTexture(GL_TEXTURE0 + i);
-            // 绑定纹理并上传到GPU
-            model->meshes[i].material.texture.value()->load();
-            loadedTextures.push_back(model->meshes[i].material.texture.value());
+            auto iter = std::find(loadedTextures.begin(), loadedTextures.end(), model->meshes[i].material.textures[j]);
+            if(iter != loadedTextures.end())
+            {
+                meshToTextureIndice[i].push_back(static_cast<int>(std::distance(loadedTextures.begin(), iter)));
+            }
         }
     }
 }
@@ -67,11 +74,6 @@ void Pipeline::bind(Model *model)
 // 清除资源
 void Pipeline::clear()
 {
-    // 清除GPU中的资源
-    for (auto texture : loadedTextures)
-    {
-        texture->unload();
-    }
     // 删除原有的 VAO, VBO, EBO
     if(binded)
     {
@@ -84,6 +86,7 @@ void Pipeline::clear()
             VBO.clear();
             EBO.clear();
             loadedTextures.clear();
+            meshToTextureIndice.clear();
             vertexCounts.clear();
             materials.clear();
         }
@@ -104,9 +107,10 @@ void Pipeline::draw()
         glBindVertexArray(VAO[i]);
         if (shader->shaderName == "texture")
         {
-            // 启用第i个纹理单元
-            glActiveTexture(GL_TEXTURE0 + i);
-            shader->setInt("material.diffuse", i);
+            for(int j = 0; j < meshToTextureIndice[i].size(); j++)
+            {
+                shader->setInt("material.diffuse", j);
+            }
             shader->setVec3f("material.specular", materials[i].specular);
             shader->setFloat("material.shininess", materials[i].shininess);
         }

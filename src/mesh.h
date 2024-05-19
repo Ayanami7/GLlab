@@ -35,19 +35,27 @@ struct Mesh
         this->indices = indices;
     }
     ~Mesh(){};
-    inline void loadTexture(Texture *tex)        //加载纹理但并不启用
-    {
-        this->material.texture = tex;
-    }
 };
 
 struct Model
 {
     vector<Mesh> meshes;
+    vector<Texture> loadedTextures;
     int meshCount = 0;
     int vertexCount = 0;
     int faceCount = 0;
-    void setAllTexture(Texture *tex);
+    void loadTexture(int index, const Texture &texture)
+    {
+        if(index < 0 || index >= meshes.size())
+        {
+            throw std::runtime_error("Index out of range.");
+        }
+        if(std::find(loadedTextures.begin(), loadedTextures.end(), texture) == loadedTextures.end())
+        {
+            loadedTextures.push_back(texture);
+        }
+        meshes[index].material.textures.push_back(texture);
+    }
     Model(const string path);
     ~Model();
 };

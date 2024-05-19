@@ -25,8 +25,8 @@ void MainWindow::init()
     // 创建管线和模型
     pipeline = new Pipeline();
     mmodel = new Model("../../resource/model/room.obj");
-    Texture *texture = new Texture("../../resource/texture/room.png");
-    mmodel->setAllTexture(texture);
+    Texture texture("../../resource/texture/room.png", "diffuse");
+    mmodel->loadTexture(0, texture);
 
     // 初始的视角矩阵
     // 计算MVP矩阵
@@ -134,7 +134,10 @@ void MainWindow::settingWidget()
         }
     }
     ImGui::End();
+}
 
+void MainWindow::meshWidget()
+{
     ImGui::SetNextWindowPos(ImVec2(0, 200));
     ImGui::SetNextWindowSize(ImVec2(300, 140));
     for (int i = 0; i < mmodel->meshes.size(); ++i)
@@ -156,7 +159,7 @@ void MainWindow::settingWidget()
                 pipeline->bind(mmodel);
             }
 
-            if (material.texture)
+            if (material.textures.size() > 0)
             {
                 ImGui::Text("Texture is set.");
                 // 如果需要，你可以添加更多的代码来显示或修改纹理
@@ -196,6 +199,8 @@ void MainWindow::show()
         debugWidget();
         // 设置窗口
         settingWidget();
+        // 模型窗口
+        meshWidget();
 
         // 渲染 ImGui
         ImGui::Render();

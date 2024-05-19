@@ -47,6 +47,7 @@ public:
 private:
     void debugWidget();                                         //调试窗口
     void settingWidget();                                       //设置窗口
+    void meshWidget();                                          //模型窗口
     void mouseHandle();                                         //鼠标处理
 
 public:

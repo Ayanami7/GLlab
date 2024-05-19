@@ -13,7 +13,8 @@ private:
     vector<unsigned int> EBO;
     vector<unsigned int> vertexCounts;
     vector<Material> materials;
-    vector<Texture*> loadedTextures;
+    vector<Texture> loadedTextures;
+    vector<vector<int>> meshToTextureIndice;
     int meshCount;
     bool binded = false;
 

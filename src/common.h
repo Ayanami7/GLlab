@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <optional>
 
 #ifdef _MSC_VER
@@ -14,6 +15,7 @@
 
 using std::string;
 using std::vector;
+using std::unordered_map;
 
 enum MaterialType
 {
@@ -29,20 +31,30 @@ struct Vertex
     glm::vec2 texCoords;
 };
 
-class Texture
+struct Texture
 {
-private:
     unsigned int ID;
-    string type;
-    unsigned char *image;
-    int width;
-    int height;
-    int nrChannels;
-public:
-    Texture(const string path);
-    ~Texture();
-    void load();
-    void unload();
+    string path;
+    string name;
+
+    // 默认构造
+    Texture(const string path, const string type);
+    // 拷贝构造
+    Texture(const Texture &other) : ID(other.ID), path(other.path), name(other.name) {}
+    // 析构
+    ~Texture(){};
+
+    bool operator==(const Texture &other) const
+    {
+        return this->ID == other.ID;
+    }
+    bool operator!=(const Texture &other) const
+    {
+        return this->ID != other.ID;
+    }
+    void bind();
+    void unbind();
+    void destroy();
     inline unsigned int getID() { return ID; }
 };
 
@@ -52,7 +64,7 @@ struct Material
     glm::vec3 diffuse;
     glm::vec3 specular;
     float shininess;
-    std::optional<Texture*> texture;
+    vector<Texture> textures;
 };
 
 struct Light
