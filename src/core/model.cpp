@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "model.h"
 
 Model::Model(const string path)
 {

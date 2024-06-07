@@ -1,4 +1,4 @@
-#include "loadShader.h"
+#include "shader.h"
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath, string name) : shaderName(name)
 {

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "common.h"
-#include "mesh.h"
-#include "loadShader.h"
+#include "model.h"
+#include "shader.h"
 
 class Pipeline
 {
@@ -17,7 +17,6 @@ private:
     vector<vector<int>> meshToTextureIndice;
     int meshCount;
     bool binded = false;
-
 
 public:
     bool polygonMode = false;

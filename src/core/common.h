@@ -70,7 +70,7 @@ struct Material
 struct Light
 {
     glm::vec3 position;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+    glm::vec3 color;            // RGB颜色
+    float diffuseIntensity;     // 漫反射强度
+    float specularIntensity;    // 镜面反射强度
 };

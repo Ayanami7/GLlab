@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(vkproj)
+project(QBRender)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -21,37 +21,5 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/ext/glfw)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/imgui)
 #添加stb
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/stb)
-
-add_executable(obj
-    src/main.cpp
-    src/common.h
-    src/common.cpp
-    src/widget.h
-    src/widget.cpp
-    src/loadShader.h
-    src/loadShader.cpp
-    src/mesh.h
-    src/mesh.cpp
-    src/pipeline.h
-    src/pipeline.cpp
-)
-
-if (MSVC)
-    target_compile_options(obj PUBLIC /utf-8) # MSVC unicode support
-endif()
-
-add_dependencies(obj imgui)
-add_dependencies(obj glad)
-add_dependencies(obj stb)
-
-target_include_directories(obj
-PUBLIC
-    ext/glm
-    ext/stb
-    ${IMGUI_INCLUDE}
-)
-
-target_link_libraries(obj PUBLIC stb)
-target_link_libraries(obj PUBLIC imgui)
-target_link_libraries(obj PUBLIC glad)
-target_link_libraries(obj PUBLIC glfw)
+#编译核心库
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/core)
