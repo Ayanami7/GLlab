@@ -1,70 +1,71 @@
 #include "model.h"
 
-Model::Model(const string path)
+void Mesh::setupMesh()
 {
-    // load the model
-    tinyobj::attrib_t attrib;
-    vector<tinyobj::shape_t> shapes;
-    vector<tinyobj::material_t> materials;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    string err;
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str()))
-    {
-        throw std::runtime_error(err);
-    }
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-    for (const auto &shape : shapes)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+    // 顶点位置
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    // 顶点法线
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, normal));
+    // 顶点纹理坐标
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texCoords));
+
+    glBindVertexArray(0); // 解除绑定
+}
+
+void Model::update()
+{
+    updateMatrix();
+}
+
+// 绘制模型
+void Model::render()
+{
+    // 绘制meshCount个mesh
+    for (int i = 0; i < meshCount; i++)
     {
-        vector<Vertex> vertices;
-        vector<unsigned int> indices;
-        for (const auto &index : shape.mesh.indices)
-        {
-            Vertex vertex;
-            // 处理位置
-            vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
-                               attrib.vertices[3 * index.vertex_index + 1],
-                               attrib.vertices[3 * index.vertex_index + 2]};
-            // 检查是否存在法线
-            if (index.normal_index >= 0)
-            {
-                vertex.normal = {attrib.normals[3 * index.normal_index + 0],
-                                 attrib.normals[3 * index.normal_index + 1],
-                                 attrib.normals[3 * index.normal_index + 2]};
-            }
-            else
-            {
-                vertex.normal = {0.0f, 0.0f, 0.0f};
-            }
-            // 检查是否存在纹理坐标
-            if (index.texcoord_index >= 0)
-            {
-                vertex.texCoords = {attrib.texcoords[2 * index.texcoord_index + 0],
-                                    attrib.texcoords[2 * index.texcoord_index + 1]};
-            }
-            else
-            {
-                vertex.texCoords = {0.0f, 0.0f};
-            }
-            vertices.push_back(vertex);
-        }
-        for (unsigned int i = 0; i < shape.mesh.indices.size(); i++)
-        {
-            indices.push_back(i);
-        }
-        meshes.push_back(Mesh(vertices, indices));
+        glBindVertexArray(meshes[i].VAO);
+        glDrawElements(GL_TRIANGLES, static_cast<int>(meshes[i].indices.size()), GL_UNSIGNED_INT, 0);
     }
-    for(auto mesh : meshes)
-    {
-        vertexCount += static_cast<int>(mesh.vertices.size());
-        faceCount += static_cast<int>(mesh.indices.size() / 3);
-    }
-    meshCount = static_cast<int>(meshes.size());
+}
+
+Model::Model()
+{
+    // 初始化默认模型位置信息
+    position = glm::vec3(0.0f, 0.0f, 0.0f);
+    rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    modelMatrix = glm::mat4(1.0f);
 }
 
 Model::~Model()
 {
-    for (auto t: loadedTextures)
+    for (auto t : loadedTextures)
     {
         t.destroy();
     }
+}
+
+// 更新模型矩阵
+void Model::updateMatrix()
+{
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, position);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.y), glm::vec3(0, 1, 0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
+    modelMatrix = glm::scale(modelMatrix, scale);
 }

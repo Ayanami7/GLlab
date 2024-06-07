@@ -1,8 +1,12 @@
 #include <stb_image.h>
 
-#include "common.h"
+#include "material.h"
 
 Texture::Texture(const string path, const string type) :path(path), name(type)
+{
+}
+
+void Texture::load()
 {
     unsigned char *image;
     int width;
@@ -25,6 +29,7 @@ Texture::Texture(const string path, const string type) :path(path), name(type)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(image);
+        loaded = true;
     }
     else
     {
@@ -44,5 +49,6 @@ void Texture::unbind()
 
 void Texture::destroy()
 {
+    loaded = false;
     glDeleteTextures(1, &ID);
 }

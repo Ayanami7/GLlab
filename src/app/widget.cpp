@@ -2,7 +2,7 @@
 
 using std::vector;
 
-void MainWindow::init()
+void Window::init()
 {
     glfwInit();
 
@@ -59,7 +59,7 @@ void MainWindow::init()
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void MainWindow::destroy()
+void Window::destroy()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -69,7 +69,7 @@ void MainWindow::destroy()
     glfwTerminate();
 }
 
-void MainWindow::debugWidget()
+void Window::debugWidget()
 {
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
@@ -82,7 +82,7 @@ void MainWindow::debugWidget()
     ImGui::Text("Triangle count: %d", mmodel->faceCount);
 }
 
-void MainWindow::settingWidget() 
+void Window::settingWidget() 
 {
     // 设定初始位置和大小
     ImGui::SetNextWindowPos(ImVec2(float(width - 320), 0));
@@ -136,7 +136,7 @@ void MainWindow::settingWidget()
     ImGui::End();
 }
 
-void MainWindow::meshWidget()
+void Window::meshWidget()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 200));
     ImGui::SetNextWindowSize(ImVec2(300, 140));
@@ -173,7 +173,7 @@ void MainWindow::meshWidget()
     }
 }
 
-void MainWindow::show()
+void Window::show()
 {
     while (!glfwWindowShouldClose(window))
     {
@@ -209,7 +209,7 @@ void MainWindow::show()
     }
 }
 
-void MainWindow::mouseHandle()
+void Window::mouseHandle()
 {
      if (ImGui::IsMouseDragging(0) &&        //鼠标左键拖动
         !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) &&     //鼠标不在ImGui窗口上
@@ -245,7 +245,7 @@ void MainWindow::mouseHandle()
 
 // 提供一些必要的信息给shader
 // 还有部分信息由Model提供
-void MainWindow::checkShader()
+void Window::checkShader()
 {
     // 通用的MVP变换
     pipeline->getShader()->setMatrix4f("projection", projection);

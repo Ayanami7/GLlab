@@ -7,7 +7,7 @@
 #include "common.h"
 #include "pipeline.h"
 
-class MainWindow
+class Window
 {
 private:
     GLFWwindow *window = nullptr; 
@@ -51,11 +51,11 @@ private:
     void mouseHandle();                                         //鼠标处理
 
 public:
-    MainWindow(int w = 1280, int h = 720, const char *t = "ImGui OpenGL")
+    Window(int w = 1280, int h = 720, const char *t = "ImGui OpenGL")
         : width(w), height(h), title(t)
     {
     }
-    ~MainWindow() {}
+    ~Window() {}
     void init();
     void checkShader();
     void show();

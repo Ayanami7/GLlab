@@ -23,3 +23,5 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/ext/imgui)
 add_subdirectory(${CMAKE_SOURCE_DIR}/ext/stb)
 #编译核心库
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/core)
+#编译主程序
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/app)

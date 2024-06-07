@@ -18,3 +18,7 @@ Scene::~Scene()
     }
 }
 
+void Scene::addModel(Model *model)
+{
+    models.push_back(model);
+}

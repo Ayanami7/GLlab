@@ -32,5 +32,14 @@ public:
         zoom = 45.0f;
     }
     Camera::~Camera() {}
+    
+    glm::mat4 getViewMatrix() const
+    {
+        return glm::lookAt(position, position + front, up);
+    }
+    glm::mat4 getProjectionMatrix(float aspect) const
+    {
+        return glm::perspective(glm::radians(fov), aspect, zNear, zFar);
+    }
 };
 

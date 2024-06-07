@@ -3,11 +3,10 @@
 
 int main()
 {
-    MainWindow *widget = new MainWindow();
+    Window *widget = new Window();
     widget->init();
     widget->show();
     widget->destroy();
-
 
     return 0;
 }
