@@ -40,8 +40,9 @@ void MainWindow::init()
     // 创建一些必要信息
     light.position = glm::vec3(1.2f, 1.0f, 2.0f);
     light.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
-    light.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
-    light.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+    light.color = glm::vec3(1.0f, 1.0f, 1.0f);
+    light.diffuse = 0.5f; // 控制漫反射光强
+    light.specular = 1.0f; // 控制镜面反射光强
 
     // 创建着色器
     phongShader = new Shader("../../shader/phong.vert", "../../shader/phong.frag", "phong");
@@ -74,8 +75,6 @@ void MainWindow::debugWidget()
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
     // 设定初始位置和大小
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(270, 140));
     ImGui::Text("This is a test.");
     ImGui::Text("Framebuffer size: %d x %d", w, h);
     ImGui::Text("Vertex count: %d", mmodel->vertexCount);
@@ -86,7 +85,7 @@ void MainWindow::settingWidget()
 {
     // 设定初始位置和大小
     ImGui::SetNextWindowPos(ImVec2(float(width - 320), 0));
-    ImGui::SetNextWindowSize(ImVec2(320, 280));
+    ImGui::SetNextWindowSize(ImVec2(320, 320));
     if (ImGui::Begin("setting"))
     {
         ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
@@ -123,11 +122,12 @@ void MainWindow::settingWidget()
 
             ImGui::PushItemWidth(240);
             bool t4 = ImGui::SliderFloat3("Ambient", &light.ambient[0], 0.0f, 1.0f);
-            bool t5 = ImGui::SliderFloat3("Diffuse", &light.diffuse[0], 0.0f, 1.0f);
-            bool t6 = ImGui::SliderFloat3("Specular", &light.specular[0], 0.0f, 1.0f);
+            bool t5 = ImGui::SliderFloat3("Color", &light.color[0], 0.0f, 1.0f);
+            bool t6 = ImGui::SliderFloat("Diffuse", &light.diffuse, 0.0f, 1.0f);
+            bool t7 = ImGui::SliderFloat("Specular", &light.specular, 0.0f, 1.0f);
             ImGui::PopItemWidth();
 
-            if (t1 || t2 || t3 || t4 || t5 || t6)
+            if (t1 || t2 || t3 || t4 || t5 || t6 ||t7)
             {
                 checkShader();
             }
@@ -139,7 +139,7 @@ void MainWindow::settingWidget()
 void MainWindow::meshWidget()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 200));
-    ImGui::SetNextWindowSize(ImVec2(300, 140));
+    ImGui::SetNextWindowSize(ImVec2(300, 160));
     for (int i = 0; i < mmodel->meshes.size(); ++i)
     {
         Mesh &mesh = mmodel->meshes[i];
@@ -162,7 +162,7 @@ void MainWindow::meshWidget()
             if (material.textures.size() > 0)
             {
                 ImGui::Text("Texture is set.");
-                // 如果需要，你可以添加更多的代码来显示或修改纹理
+                // 此处可以添加代码显示纹理
             }
             else
             {
@@ -256,14 +256,15 @@ void MainWindow::checkShader()
     {
         pipeline->getShader()->setVec3f("light.position", light.position);
         pipeline->getShader()->setVec3f("light.ambient", light.ambient);
-        pipeline->getShader()->setVec3f("light.diffuse", light.diffuse);
-        pipeline->getShader()->setVec3f("light.specular", light.specular);
+        pipeline->getShader()->setVec3f("light.color", light.color);
+        pipeline->getShader()->setFloat("light.diffuse", light.diffuse);
+        pipeline->getShader()->setFloat("light.specular", light.specular);
     }
     else
     {
         pipeline->getShader()->setVec3f("light.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-        pipeline->getShader()->setVec3f("light.diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
-        pipeline->getShader()->setVec3f("light.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+        pipeline->getShader()->setFloat("light.diffuse", 0.0f);
+        pipeline->getShader()->setFloat("light.specular", 0.0f);
     }
     pipeline->getShader()->setVec3f("viewPos", cameraPos);
 }

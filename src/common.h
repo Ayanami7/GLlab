@@ -71,6 +71,7 @@ struct Light
 {
     glm::vec3 position;
     glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+    glm::vec3 color;
+    float diffuse;
+    float specular;
 };

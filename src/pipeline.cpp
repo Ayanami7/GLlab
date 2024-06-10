@@ -50,6 +50,7 @@ void Pipeline::bind(Model *model)
         materials[i] = model->meshes[i].material;
     }
 
+    this->loadedTextures.clear();
     this->loadedTextures = model->loadedTextures;
     for(int i = 0; i < loadedTextures.size(); i++)
     {
@@ -57,6 +58,7 @@ void Pipeline::bind(Model *model)
         loadedTextures[i].bind();
     }
 
+    this->meshToTextureIndice.clear();
     meshToTextureIndice.resize(meshCount);
     for(int i = 0; i < meshCount; i++)
     {
