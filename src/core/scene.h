@@ -14,11 +14,9 @@ private:
 
     // 环境设置
     glm::vec3 ambientColor;
-    glm::vec3 ambientIntensity;
-
+    float ambientIntensity;
+    
 public:
-
-
     // 性能统计数据
     int vertexCount = 0;
     int faceCount = 0;
@@ -30,6 +28,7 @@ public:
 
     // 通用接口
     void addModel(Model* model);
+    void addLight(Light* light);
     void initialize();
     void update();
     void render();

@@ -32,7 +32,6 @@ class Model
 public:
     // 核心数据
     vector<Mesh> meshes;
-    vector<Texture> loadedTextures;
     string name;
 
     // 位置信息
@@ -63,16 +62,14 @@ public:
     // 通用接口
     void update();      // 更新状态
     void render();      // 执行渲染
-    void loadTexture(int index, const Texture &texture)
+    void loadTexture(int index, Texture &texture)
     {
         if(index < 0 || index >= meshes.size())
         {
             throw std::runtime_error("Index out of range.");
         }
-        if(std::find(loadedTextures.begin(), loadedTextures.end(), texture) == loadedTextures.end())
-        {
-            loadedTextures.push_back(texture);
-        }
+
+        // 真正加载纹理
         meshes[index].material.textures.push_back(texture);
     }
     Model();

@@ -15,10 +15,10 @@ private:
     Window *window;
     Scene *scene;
     Pipeline *pipeline;
-    ResourceManager *resourceManager;
-
-    // 内部数据
-    vector<Shader *> shaders;
+    ShaderManager *shaderManager;
+    ModelManager *modelManager;
+    TextureManager *textureManager;
+    
 public:
     void render();
 };

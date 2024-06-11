@@ -1,5 +1,6 @@
 add_library(QBCore STATIC
     common.h
+    exception.h
     shader.h
     shader.cpp
     scene.h

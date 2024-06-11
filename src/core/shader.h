@@ -23,18 +23,3 @@ public:
 private:
     void checkCompileErrors(unsigned int shader, std::string type);
 };
-
-class ShaderView
-{
-public:
-    Shader *shader;
-    ShaderView(Shader *shader);
-    void use();
-    void remove();
-    void setBool(const std::string &name, bool value);
-    void setInt(const std::string &name, int value);
-    void setFloat(const std::string &name, float value);
-    void setMatrix4f(const std::string &name,glm::mat4 transform);
-    void setVec3f(const std::string &name, glm::vec3 value);
-    void setVec4f(const std::string &name, glm::vec4 value);
-};

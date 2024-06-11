@@ -7,14 +7,15 @@
 struct Texture
 {
     unsigned int ID;
-    bool loaded = false;
+    int unit = -1;      //纹理单元为-1时表示未绑定
     string path;
     string name;
-
+    
     // 默认构造
     Texture(const string path, const string type);
     // 拷贝构造
-    Texture(const Texture &other) : ID(other.ID), path(other.path), name(other.name), loaded(other.loaded){}
+    Texture(const Texture &other)
+        : ID(other.ID), path(other.path), name(other.name), unit(other.unit){}
     // 析构
     ~Texture(){};
 
@@ -26,10 +27,9 @@ struct Texture
     {
         return this->ID != other.ID;
     }
-    void load();
-    void bind();
-    void unbind();
     void destroy();
+    void bind(int unit);
+    void unbind();
     inline unsigned int getID() { return ID; }
 };
 
