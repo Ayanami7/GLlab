@@ -20,5 +20,7 @@ void Texture::unbind()
 
 void Texture::destroy()
 {
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glDeleteTextures(1, &ID);
 }

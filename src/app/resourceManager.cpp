@@ -8,6 +8,28 @@ void ShaderManager::loadShader(const string vertexPath, const string fragmentPat
     loadedShaders.push_back(shader);
 }
 
+Shader* ShaderManager::getShader(const string name)
+{
+    for (auto &shader : loadedShaders)
+    {
+        if (shader->shaderName == name)
+        {
+            return shader;
+        }
+    }
+    return nullptr;
+}
+
+void ShaderManager::clear()
+{
+    for (auto &shader : loadedShaders)
+    {
+        shader->destroy();
+        delete shader;
+    }
+    loadedShaders.clear();
+}
+
 void ModelManager::loadModel(const string path, const string name)
 {
     Model *model = new Model();
@@ -79,6 +101,35 @@ void ModelManager::loadModel(const string path, const string name)
         model->faceCount += static_cast<int>(mesh.indices.size() / 3);
     }
     model->meshCount = static_cast<int>(model->meshes.size());
+
+    for (auto &mesh : model->meshes)
+    {
+        mesh.material.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+        mesh.material.ambient = glm::vec3(0.5f, 0.5f, 0.5f);
+        mesh.material.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+        mesh.material.shininess = 32.0f;
+    }
+}
+
+Model* ModelManager::getModel(const string name)
+{
+    for (auto &model : loadedModels)
+    {
+        if (model->name == name)
+        {
+            return model;
+        }
+    }
+    return nullptr;
+}
+
+void ModelManager::clear()
+{
+    for (auto &model : loadedModels)
+    {
+        delete model;
+    }
+    loadedModels.clear();
 }
 
 void TextureManager::loadTexture(const string path, const string name)
@@ -140,11 +191,23 @@ void TextureManager::loadTexture(const string path, const string name)
     }
 }
 
+Texture TextureManager::getTexture(const string name)
+{
+    for (auto &texture : loadedTextures)
+    {
+        if (texture.name == name)
+        {
+            return texture;
+        }
+    }
+    return Texture("", "");
+}
+
 void TextureManager::clear()
 {
-    for (auto texture : loadedTextures)
+    for (auto &texture : loadedTextures)
     {
-        texture.destroy();
+        texture.destroy();      // 自动解绑并销毁
     }
     loadedTextures.clear();
     currentUnit = 0;

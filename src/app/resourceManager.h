@@ -13,6 +13,8 @@ public:
     vector<Shader*> loadedShaders;
 public:
     void loadShader(const string vertexPath, const string fragmentPath, const string name);
+    Shader* getShader(const string name);
+    void clear();
 };
 
 class ModelManager
@@ -21,6 +23,8 @@ public:
     vector<Model*> loadedModels;
 public:
     void loadModel(const string path, const string name);
+    Model* getModel(const string name);
+    void clear();
 };
 
 class TextureManager
@@ -29,7 +33,8 @@ public:
     vector<Texture> loadedTextures;
     int currentUnit = 0;
 public:
-    void loadTexture(const string path, const string name); 
+    void loadTexture(const string path, const string name);
+    Texture getTexture(const string name);
     void clear();
 };
 

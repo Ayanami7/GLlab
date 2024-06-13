@@ -61,7 +61,6 @@ public:
 
     // 通用接口
     void update();      // 更新状态
-    void render();      // 执行渲染
     void loadTexture(int index, Texture &texture)
     {
         if(index < 0 || index >= meshes.size())

@@ -31,17 +31,6 @@ void Model::update()
     updateMatrix();
 }
 
-// 绘制模型
-void Model::render()
-{
-    // 绘制meshCount个mesh
-    for (int i = 0; i < meshCount; i++)
-    {
-        glBindVertexArray(meshes[i].VAO);
-        glDrawElements(GL_TRIANGLES, static_cast<int>(meshes[i].indices.size()), GL_UNSIGNED_INT, 0);
-    }
-}
-
 Model::Model()
 {
     // 初始化默认模型位置信息
@@ -53,10 +42,7 @@ Model::Model()
 
 Model::~Model()
 {
-    for (auto t : loadedTextures)
-    {
-        t.destroy();
-    }
+    
 }
 
 // 更新模型矩阵

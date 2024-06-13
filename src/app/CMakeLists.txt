@@ -20,7 +20,5 @@ if (MSVC)
     target_compile_options(QBApp PUBLIC /utf-8)    # MSVC unicode support
 endif()
 
-
-
 target_link_libraries(QBApp PUBLIC QBCore)
 target_link_libraries(QBApp PUBLIC imgui)

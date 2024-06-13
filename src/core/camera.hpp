@@ -15,9 +15,12 @@ public:
     glm::vec3 up;
     glm::vec3 right;
     glm::vec3 worldUp;
-    float speed;
-    float sensitivity;
-    float zoom;
+
+    int height;
+    int width;
+
+    glm::mat4 viewMatrix;
+    glm::mat4 projectionMatrix;
 
 public:
     Camera::Camera()
@@ -27,19 +30,19 @@ public:
         up = glm::vec3(0.0f, 1.0f, 0.0f);
         right = glm::vec3(1.0f, 0.0f, 0.0f);
         worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-        speed = 2.5f;
-        sensitivity = 0.1f;
-        zoom = 45.0f;
+
+        viewMatrix = glm::mat4(1.0f);
+        projectionMatrix = glm::mat4(1.0f);
     }
     Camera::~Camera() {}
-    
-    glm::mat4 getViewMatrix() const
+
+    void update()
     {
-        return glm::lookAt(position, position + front, up);
-    }
-    glm::mat4 getProjectionMatrix(float aspect) const
-    {
-        return glm::perspective(glm::radians(fov), aspect, zNear, zFar);
+        right = glm::normalize(glm::cross(this->front, worldUp));
+        up = glm::normalize(glm::cross(right, this->front));
+
+        viewMatrix = glm::lookAt(position, position + front, up);
+        projectionMatrix = glm::perspective(glm::radians(fov), static_cast<float>(width / height), zNear, zFar);
     }
 };
 

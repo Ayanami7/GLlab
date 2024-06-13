@@ -13,11 +13,11 @@ public:
     string shaderName;
     Shader(const string vertexPath, const string fragmentPath, const string name);
     void use();     //激活shader
-    void remove();   //关闭shader
+    void destroy();   //删除shader
     void setBool(const std::string &name, bool value) const;  
     void setInt(const std::string &name, int value) const;   
     void setFloat(const std::string &name, float value) const;
-    void setMatrix4f(const std::string &name,glm::mat4 transform) const;
+    void setMat4f(const std::string &name,glm::mat4 transform) const;
     void setVec3f(const std::string &name, glm::vec3 value) const;
     void setVec4f(const std::string &name, glm::vec4 value) const;
 private:

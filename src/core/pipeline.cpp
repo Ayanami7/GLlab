@@ -6,142 +6,66 @@ void Pipeline::setShader(Shader *shader)
     shader->use();
 }
 
-Shader* Pipeline::getShader()
+void Pipeline::render(Scene *scene)
 {
-    return this->shader;
-}
+    glEnable(GL_DEPTH_TEST); // 启用深度测试
+    glfwPollEvents();
 
-void Pipeline::bind(Model *model)
-{
-    meshCount = model->meshCount;
-    binded = true;
+    // 清除深度缓冲区
+    glClear(GL_DEPTH_BUFFER_BIT); // 清除深度缓冲区
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // 清除颜色缓冲区
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    // 创建新的 VAO, VBO, EBO
-    VAO.resize(meshCount);
-    VBO.resize(meshCount);
-    EBO.resize(meshCount);
-    vertexCounts.resize(meshCount);
-    materials.resize(meshCount);
+    // 配置环境光照
+    shader->setVec3f("ambientColor", scene->getAmbientColor());
+    shader->setFloat("ambientIntensity", scene->getAmbientIntensity());
 
-    glGenVertexArrays(meshCount, VAO.data());
-    glGenBuffers(meshCount, VBO.data());
-    glGenBuffers(meshCount, EBO.data());
+    // 配置V和P矩阵
+    shader->setVec3f("viewPos", scene->getCamera()->position);
+    shader->setMat4f("view", scene->getCamera()->viewMatrix);
+    shader->setMat4f("projection", scene->getCamera()->projectionMatrix);
 
-    for(int i = 0; i < meshCount; i++)
+    if (polygonMode)
     {
-        glBindVertexArray(VAO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, model->meshes[i].vertices.size() * sizeof(Vertex), model->meshes[i].vertices.data(), GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->meshes[i].indices.size() * sizeof(unsigned int), model->meshes[i].indices.data(), GL_STATIC_DRAW);
-
-        // 顶点位置
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        // 顶点法线
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-        // 顶点纹理坐标
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-
-        vertexCounts[i] = static_cast<unsigned int>(model->meshes[i].indices.size());
-        materials[i] = model->meshes[i].material;
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 线框模式
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 填充模式
     }
 
-    this->loadedTextures = model->loadedTextures;
-    for(int i = 0; i < loadedTextures.size(); i++)
+    // 遍历设置光源
+    const std::vector<Light *> &lights = scene->getLights();
+    for (int i = 0; i < lights.size(); i++)
     {
-        glActiveTexture(GL_TEXTURE0 + i);
-        loadedTextures[i].bind();
+        shader->setInt("numLights", static_cast<int>(lights.size()));
+        shader->setVec3f("lights[" + std::to_string(i) + "].position", lights[i]->position);
+        shader->setVec3f("lights[" + std::to_string(i) + "].color", lights[i]->color);
+        shader->setFloat("lights[" + std::to_string(i) + "].diffuseIntensity", lights[i]->diffuseIntensity);
+        shader->setFloat("lights[" + std::to_string(i) + "].specularIntensity", lights[i]->specularIntensity);
     }
 
-    meshToTextureIndice.resize(meshCount);
-    for(int i = 0; i < meshCount; i++)
+    // 遍历绘制模型
+    const std::vector<Model *> &models = scene->getModels();
+    for (auto model : models)
     {
-        for(int j = 0; j < model->meshes[i].material.textures.size(); j++)
+        shader->setMat4f("model", model->getModelMatrix());
+
+        for(auto mesh : model->meshes)
         {
-            auto iter = std::find(loadedTextures.begin(), loadedTextures.end(), model->meshes[i].material.textures[j]);
-            if(iter != loadedTextures.end())
+            glBindVertexArray(mesh.VAO);
+            // 此处规定了为第一张贴图
+            if (mesh.material.textures.size() > 0)
             {
-                meshToTextureIndice[i].push_back(static_cast<int>(std::distance(loadedTextures.begin(), iter)));
+                shader->setInt("material.diffuse", mesh.material.textures[0].unit);
             }
+            shader->setVec3f("material.specular", mesh.material.specular);
+            shader->setFloat("material.shininess", mesh.material.shininess);
+
+            glDrawElements(GL_TRIANGLES, static_cast<int>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
         }
     }
-}
 
-// 清除资源
-void Pipeline::clear()
-{
-    // 删除原有的 VAO, VBO, EBO
-    if(binded)
-    {
-        if (VAO.size() > 0)
-        {
-            glDeleteVertexArrays(int(VAO.size()), VAO.data());
-            glDeleteBuffers(int(VBO.size()), VBO.data());
-            glDeleteBuffers(int(EBO.size()), EBO.data());
-            VAO.clear();
-            VBO.clear();
-            EBO.clear();
-            loadedTextures.clear();
-            meshToTextureIndice.clear();
-            vertexCounts.clear();
-            materials.clear();
-        }
-    }
-    binded = false;
-}
 
-void Pipeline::draw()
-{
-    if (!binded)
-    {
-        throw std::runtime_error("Pipeline has not binded yet.");
-    }
-
-    // 绘制meshCount个mesh
-    for (int i = 0; i < meshCount; i++)
-    {
-        glBindVertexArray(VAO[i]);
-        if (shader->shaderName == "texture")
-        {
-            for(int j = 0; j < meshToTextureIndice[i].size(); j++)
-            {
-                shader->setInt("material.diffuse", j);
-            }
-            shader->setVec3f("material.specular", materials[i].specular);
-            shader->setFloat("material.shininess", materials[i].shininess);
-        }
-        else if(shader->shaderName == "phong")
-        {
-            shader->setVec3f("material.ambient", materials[i].ambient);
-            shader->setVec3f("material.diffuse", materials[i].diffuse);
-            shader->setVec3f("material.specular", materials[i].specular);
-            shader->setFloat("material.shininess", materials[i].shininess);
-        }
-        else if (shader->shaderName == "default")
-        {
-            // 空操作
-        }
-        else
-        {
-            throw std::runtime_error("Unknown shader.");
-        }
-
-        // 是否绘制线框
-        if (polygonMode)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
-
-        }
-        else
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
-        }
-
-    }
 }
