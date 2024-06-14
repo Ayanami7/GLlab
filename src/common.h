@@ -38,7 +38,7 @@ struct Texture
     string name;
 
     // 默认构造
-    Texture(const string path, const string type);
+    Texture(const string path, const string type, bool reverse = true);
     // 拷贝构造
     Texture(const Texture &other) : ID(other.ID), path(other.path), name(other.name) {}
     // 析构

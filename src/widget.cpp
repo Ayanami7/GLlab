@@ -29,20 +29,30 @@ void MainWindow::init()
     currentModel = new Model("../../resource/model/bunny.obj");
     modelList.push_back(currentModel);
 
+    // 创建teapot模型
+    currentModel = new Model("../../resource/model/teapot.obj");
+    modelList.push_back(currentModel);
+
     // 创建room模型
     currentModel = new Model("../../resource/model/room.obj");
-    Texture texture0("../../resource/texture/room.png", "diffuse");
-    currentModel->loadTexture(0, texture0);
+    Texture texture1("../../resource/texture/room.png", "diffuse");
+    currentModel->loadTexture(0, texture1);
     modelList.push_back(currentModel);
 
     // 创建amos模型
     currentModel = new Model("../../resource/model/amost.obj");
     modelList.push_back(currentModel);
 
-    // 创建mist模型
-    currentModel = new Model("../../resource/model/mist.obj");
-    Texture texture1("../../resource/texture/mist.png", "diffuse");
-    currentModel->loadTexture(0, texture1);
+    // 创建xbox模型
+    currentModel = new Model("../../resource/model/xbox.obj");
+    Texture texture2("../../resource/texture/xbox.png", "diffuse", false);
+    currentModel->loadTexture(0, texture2);
+    modelList.push_back(currentModel);
+
+    // 创建chest模型
+    currentModel = new Model("../../resource/model/chest.obj");
+    Texture texture3("../../resource/texture/chest.png", "diffuse");
+    currentModel->loadTexture(0, texture3);
     modelList.push_back(currentModel);
 
     currentModel = modelList[0];

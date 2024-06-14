@@ -20,7 +20,7 @@ private:
     const char *ui_shaderType[2] = {"Phong", "Texture"};
     int ui_shaderIndex = 0;
     // 用于模型选择框
-    const char *ui_modelName[4] = {"bunny", "room", "amost", "mist"};
+    const char *ui_modelName[6] = {"bunny", "teapot", "room", "amost", "xbox", "chest"};
     int ui_modelIndex = 0;
 
     bool lightEnable = true;
@@ -44,7 +44,7 @@ private:
 public:
     int height, width;
     float fov = 45.0f;
-    float zoom_speed = 0.1f;
+    float zoom_speed = 0.3f;
     float zNear = 0.1f;
     float zFar = 20.0f;
 
