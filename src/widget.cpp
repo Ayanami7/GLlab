@@ -22,11 +22,31 @@ void MainWindow::init()
     (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // 启用键盘控制
 
-    // 创建管线和模型
+    // 创建管线
     pipeline = new Pipeline();
-    mmodel = new Model("../../resource/model/room.obj");
-    Texture texture("../../resource/texture/room.png", "diffuse");
-    mmodel->loadTexture(0, texture);
+
+    // 创建bunny模型
+    currentModel = new Model("../../resource/model/bunny.obj");
+    modelList.push_back(currentModel);
+
+    // 创建room模型
+    currentModel = new Model("../../resource/model/room.obj");
+    Texture texture0("../../resource/texture/room.png", "diffuse");
+    currentModel->loadTexture(0, texture0);
+    modelList.push_back(currentModel);
+
+    // 创建amos模型
+    currentModel = new Model("../../resource/model/amost.obj");
+    modelList.push_back(currentModel);
+
+    // 创建mist模型
+    currentModel = new Model("../../resource/model/mist.obj");
+    Texture texture1("../../resource/texture/mist.png", "diffuse");
+    currentModel->loadTexture(0, texture1);
+    modelList.push_back(currentModel);
+
+    currentModel = modelList[0];
+    pipeline->bind(currentModel);
 
     // 初始的视角矩阵
     // 计算MVP矩阵
@@ -50,7 +70,7 @@ void MainWindow::init()
 
     pipeline->setShader(phongShader);
     checkShader();      // 检查shader
-    pipeline->bind(mmodel);
+    pipeline->bind(currentModel);
 
     // 设置 ImGui 风格
     ImGui::StyleColorsDark();
@@ -77,8 +97,8 @@ void MainWindow::debugWidget()
     // 设定初始位置和大小
     ImGui::Text("This is a test.");
     ImGui::Text("Framebuffer size: %d x %d", w, h);
-    ImGui::Text("Vertex count: %d", mmodel->vertexCount);
-    ImGui::Text("Triangle count: %d", mmodel->faceCount);
+    ImGui::Text("Vertex count: %d", currentModel->vertexCount);
+    ImGui::Text("Triangle count: %d", currentModel->faceCount);
 }
 
 void MainWindow::settingWidget() 
@@ -90,19 +110,22 @@ void MainWindow::settingWidget()
     {
         ImGui::Checkbox("Polygon Mode", &pipeline->polygonMode);
         ImGui::PushItemWidth(100); // 设置接下来的控件宽度为100
-        // 设置阶数
         if (ImGui::Combo("Shader Type", &ui_shaderIndex, ui_shaderType, IM_ARRAYSIZE(ui_shaderType)))
         {
             if(ui_shaderIndex == 0)
             {
                 pipeline->setShader(phongShader);
-
             }
             else if(ui_shaderIndex == 1)
             {
                 pipeline->setShader(textureShader);
             }
             checkShader();
+        }
+        if(ImGui::Combo("Model Name", &ui_modelIndex, ui_modelName, IM_ARRAYSIZE(ui_modelName)))
+        {
+            currentModel = modelList[ui_modelIndex];
+            pipeline->bind(currentModel);
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
@@ -140,9 +163,9 @@ void MainWindow::meshWidget()
 {
     ImGui::SetNextWindowPos(ImVec2(0, 200));
     ImGui::SetNextWindowSize(ImVec2(300, 160));
-    for (int i = 0; i < mmodel->meshes.size(); ++i)
+    for (int i = 0; i < currentModel->meshes.size(); ++i)
     {
-        Mesh &mesh = mmodel->meshes[i];
+        Mesh &mesh = currentModel->meshes[i];
         Material &material = mesh.material;
 
         std::string windowTitle = "Material Settings for Mesh " + std::to_string(i);
@@ -156,7 +179,7 @@ void MainWindow::meshWidget()
             if (t1 || t2 || t3 || t4)
             {
                 checkShader();
-                pipeline->bind(mmodel);
+                pipeline->bind(currentModel);
             }
 
             if (material.textures.size() > 0)

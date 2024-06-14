@@ -109,10 +109,16 @@ void Pipeline::draw()
         glBindVertexArray(VAO[i]);
         if (shader->shaderName == "texture")
         {
+            if (meshToTextureIndice[i].size() == 0)
+            {
+                // 取一个较大值覆盖掉纹理采样器
+                shader->setInt("material.diffuse", 15);
+            }
             for(int j = 0; j < meshToTextureIndice[i].size(); j++)
             {
-                shader->setInt("material.diffuse", j);
+                shader->setInt("material.diffuse", meshToTextureIndice[i][j]);
             }
+            
             shader->setVec3f("material.specular", materials[i].specular);
             shader->setFloat("material.shininess", materials[i].shininess);
         }

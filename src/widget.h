@@ -19,6 +19,9 @@ private:
     // 着色器选择框
     const char *ui_shaderType[2] = {"Phong", "Texture"};
     int ui_shaderIndex = 0;
+    // 用于模型选择框
+    const char *ui_modelName[4] = {"bunny", "room", "amost", "mist"};
+    int ui_modelIndex = 0;
 
     bool lightEnable = true;
 
@@ -34,7 +37,8 @@ private:
     glm::mat4 projection = glm::mat4(1.0f);
 
     // 暂时放在这 可能有后续抽象
-    Model *mmodel;
+    Model *currentModel;
+    vector<Model *> modelList;
     Light light;
 
 public:
