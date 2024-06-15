@@ -28,7 +28,9 @@ private:
 
     std::vector<float> c_points;                            // 控制点 默认存储为7个
     std::vector<float> vbuffer;                             // 用于存储线缓冲
+    std::vector<float> vbuffer1;                            // 用于存储控制点缓冲
     unsigned int VAO, VBO;                                  // VAO VBO
+    unsigned int VAO1, VBO1;                                // 控制点 VAO1 VBO1
 
     std::vector<std::vector<float>> c_points3D;             // 存储3D控制点
     std::vector<float> vbuffer3D;                           // 用于存储3D面缓冲
@@ -36,10 +38,11 @@ private:
 
     std::vector<float> sbuffer;                             // 用于存储球体缓冲
     std::vector<unsigned int> ibuffer;                      // 存储索引缓冲
-    unsigned int VAOs, VBOs, EBOs;                          // 球体 VAO VBO EBO
+    unsigned int VAOs, VBOs, EBOs;                          // 球体 VAOs VBOs EBOs
 
-    bool modfiy3D = true;
-    bool displayPoints = false;
+    bool modfiy3D = true;                                   // 3D控制点是否被修改
+    bool displayPoints = false;                             // 是否显示控制点
+    bool displayControlLine = false;                        // 是否显示控制线
     Shader *shader;
 public:
     int height, width;

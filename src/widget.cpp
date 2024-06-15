@@ -34,11 +34,15 @@ void MainWindow::init()
     //初始化VAO VBO
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
+
     glGenBuffers(1, &VBO3D);
     glGenVertexArrays(1, &VAO3D);
+
     glGenBuffers(1, &VBOs);
     glGenVertexArrays(1, &VAOs);
     glGenBuffers(1, &EBOs);
+
+    glGenBuffers(1, &VBO1);
 
     // 加载着色器
     shader = new Shader("../../shader/default_vert.glsl", "../../shader/default_frag.glsl");
@@ -79,8 +83,18 @@ void MainWindow::destroy()
     // 销毁缓冲
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+
     glDeleteVertexArrays(1, &VAO3D);
     glDeleteBuffers(1, &VBO3D);
+
+    glDeleteVertexArrays(1, &VAOs);
+    glDeleteBuffers(1, &VBOs);
+    glDeleteBuffers(1, &EBOs);
+
+    glDeleteVertexArrays(1, &VAO1);
+    glDeleteBuffers(1, &VBO1);
+
+
     // 清理 ImGui
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -160,6 +174,8 @@ void MainWindow::settingWidget()
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
 
+        if (bezierIndex != BEZIER_LINE)
+        {
         ImGui::PushItemWidth(120); // 设置接下来的控件宽度为120
         // 设置视野范围
         if (ImGui::SliderFloat("fov", &fov, 30.0f, 120.0f))
@@ -167,11 +183,22 @@ void MainWindow::settingWidget()
             switchType();
         }
         ImGui::PopItemWidth(); // 恢复之前的宽度
+        }
 
         // 选择是否隐藏控制点
         if(ImGui::Checkbox("Display Control Points", &displayPoints))
         {
             ;
+        }
+
+        // 只在2D模式下显示
+        if (bezierIndex == BEZIER_LINE)
+        {
+            // 选择是否隐藏控制线
+            if (ImGui::Checkbox("Display Control Line", &displayControlLine))
+            {
+                ;
+            }
         }
 
         ImGui::PushItemWidth(100);
@@ -204,6 +231,7 @@ void MainWindow::settingWidget()
 void MainWindow::render1()
 {
     // 绘制控制点
+    shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));    // 橙色
     if (displayPoints)    //非隐藏模式时绘制
     {
         for (int i = 0; i < rankIndex + 3; i++)
@@ -235,7 +263,27 @@ void MainWindow::render1()
         }
     }
 
-    // 绘制
+    if (displayControlLine)
+    {
+        // 绘制直线扫描线
+        shader->setVec4("color", glm::vec4(0.8f, 0.85f, 0.90f, 1.0f)); // 浅蓝色
+        vbuffer1.clear();
+        for (int i = 0; i < rankIndex + 3; i++)
+        {
+            vbuffer1.push_back(c_points[i * 3]);
+            vbuffer1.push_back(c_points[i * 3 + 1]);
+            vbuffer1.push_back(0.0f);
+        }
+        glBindVertexArray(VAO1);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vbuffer1.size(), vbuffer1.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+        glEnableVertexAttribArray(0);
+        glDrawArrays(GL_LINE_STRIP, 0, (int)vbuffer1.size() / 3);
+    }
+
+    // 绘制贝塞尔曲线
+    shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));    // 橙色
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINE_STRIP, 0, (int)vbuffer.size() / 3);
 
@@ -398,7 +446,7 @@ void MainWindow::render2()
                 glDrawElements(GL_TRIANGLES, (int)ibuffer.size(), GL_UNSIGNED_INT, 0);
             }
         }
-        shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        shader->setVec4("color", glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));    //橙色
     }
 
     if (ImGui::IsMouseDragging(0) &&        //鼠标左键拖动
